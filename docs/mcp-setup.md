@@ -33,7 +33,7 @@ claude mcp add --scope user --transport http context7 https://mcp.context7.com/m
 ### 런타임·도구
 | 항목 | 고정 | 비고 |
 |------|------|------|
-| **Node.js** | **24.17.0** (24 LTS "Krypton") | Active LTS. Vite 8(`>=22.12`) **및 react-router 8(`>=22.22.0`)** 동시 충족. **로컬·CI 동일 고정**(로컬 22.20.0 < 22.22.0 → **24 업그레이드 권장**; init 자체는 22.20.0에서도 동작하나 엔진 경고) |
+| **Node.js** | **24.17.0** (24 LTS "Krypton") | Active LTS. Vite 8(`>=22.12`) **및 react-router 8(`>=22.22.0`)** 동시 충족. **로컬·CI 모두 24.17.0** ✅ (로컬 winget으로 업그레이드 완료 2026-06-22, npm 11.13.0) |
 | **패키지 매니저** | **npm** (Node 24 동봉 11.x) | 추가 설치 불필요 |
 | **TypeScript** | **6.0.3** | react-ts 템플릿 |
 
@@ -41,7 +41,7 @@ claude mcp add --scope user --transport http context7 https://mcp.context7.com/m
 | 패키지 | 고정 | 비고 |
 |--------|------|------|
 | **react** / **react-dom** | **19.2.7** | React 19. React Compiler v1 정식(옵션) |
-| **react-router** | 타깃 **8.0.1** / 현재 설치 **7.18.0** | ⚠️ v7부터 `react-router`로 통합(`react-router-dom`은 7.18.0 호환용 재export). 신규는 **`react-router` 직접 설치**. 최신 **8.0.1은 Node `>=22.22.0` 요구** → **로컬 22.20.0에서 `npm i react-router` 가 engine-aware로 7.18.0 자동 선택**(✔ 빌드 검증됨). **Node 24 업그레이드 후 `npm i react-router@latest` → 8.0.1**. API(`createHashRouter`)는 7/8 동일. 해시 라우팅으로 GH Pages 404 회피 → [`deploy.md §4`](./deploy.md) |
+| **react-router** | **8.0.1** ✅ | v7부터 `react-router`로 통합(`react-router-dom` 아님). Node `>=22.22.0` 요구 → Node 24에서 설치 완료(✔ 빌드 검증). API: `createHashRouter`+`RouterProvider`(`react-router/dom`). 해시 라우팅으로 GH Pages 404 회피 → [`deploy.md §4`](./deploy.md) |
 
 ### 개발 의존성 (devDependencies)
 | 패키지 | 고정 | 비고 |

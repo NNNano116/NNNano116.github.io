@@ -18,8 +18,7 @@
 | 패키지 매니저 | npm | 〃 |
 | 라우팅 | 해시 라우팅(`createHashRouter`) | [deploy §4](./deploy.md) |
 
-> ⚠️ **로컬 Node**가 22.20.0이면 react-router 8 설치 시 `EBADENGINE` 경고가 난다(설치·빌드는 동작).
-> 정합을 위해 **24.17.0로 업그레이드 권장**. CI(`deploy.yml`)는 이미 Node 24 고정.
+> ✅ **로컬 Node 24.17.0**(winget 업그레이드 완료, npm 11.13.0) — CI(`deploy.yml`)와 동일 고정.
 
 ---
 
@@ -48,9 +47,8 @@ npm install                 # 템플릿 의존성(react 19.2.7 · vite 8.0.16 ·
 npm install react-router    # react-router-dom 아님(v7+ 통합 패키지)
 ```
 
-> ⚠️ **engine-aware 자동 선택**: 최신 `react-router` 8.0.1은 Node `>=22.22.0` 요구.
-> **로컬 Node 22.20.0에서는 npm이 호환 최신인 7.18.0을 자동 설치**한다(✔ 빌드 검증됨, API 동일).
-> **Node 24 업그레이드 후** `npm i react-router@latest` 로 8.0.1 상향. 버전 정본은 [mcp-setup D-2](./mcp-setup.md).
+> ✅ **react-router 8.0.1 설치 완료**(Node 24.17.0). 8.0.1은 Node `>=22.22.0` 요구라 **Node 24 업그레이드 후 `npm i react-router@latest`** 로 상향함(✔ 빌드 검증).
+> 참고: Node 22.20.0이던 시점엔 npm engine-aware로 7.18.0이 선택됐었음(API는 7/8 동일). 버전 정본은 [mcp-setup D-2](./mcp-setup.md).
 
 ## 3. `vite.config.ts` — base 적용 (가장 중요)
 
@@ -148,7 +146,7 @@ jobs:
 > **자격증명 불필요** — Actions의 `GITHUB_TOKEN` 자동 사용(로컬 `.env`와 무관) → [deploy §5](./deploy.md).
 > 해시 라우팅이라 `404.html` fallback은 불필요(경로가 `#` 뒤에 있어 항상 `index.html` 서빙).
 
-## 6. 검증 ✔ (2026-06-22, Node 22.20.0)
+## 6. 검증 ✔ (2026-06-22, Node 24.17.0 · react-router 8.0.1)
 
 ```sh
 npm run build      # dist/ 생성 — 에셋 경로가 /nano-portfolio/ 로 rewrite 되는지 확인

@@ -5,8 +5,8 @@
 > 각 대분류의 세부 내용은 **가이드 허브**(`docs/guide/_hub_*.md`)가 보유합니다(§3 표에서 진입).
 
 > 🟡 **현재 상태**: 스택(React+Vite+GH Pages)·개발 스킬 문서·git/`.env` 규약 **확정**.
-> **MCP**: `context7` 연결됨(D-1). **버전 고정**(D-2/D-3, 2026-06-22): Node 24.17.0 · React 19.2.7 · Vite 8.0.16 · TS 6.0.3 · react-router 7.18(→Node24 후 8.0.1) · npm → SSOT [`mcp-setup.md`](./docs/mcp-setup.md).
-> ✅ **프로젝트 초기화 완료**(스캐폴드+`base`+해시 라우터+`deploy.yml`, **빌드 검증 ✔**) → [`project-init.md`](./docs/project-init.md). **앱의 구체 목적·기능**은 추후.
+> **MCP**: `context7` 연결됨(D-1). **버전 고정**(D-2/D-3): Node 24.17.0 · React 19.2.7 · Vite 8.0.16 · TS 6.0.3 · react-router 8.0.1 · npm 11 → SSOT [`mcp-setup.md`](./docs/mcp-setup.md).
+> ✅ **초기화·배포 완료**: 스캐폴드+`base`+해시 라우터+`deploy.yml`, **빌드 검증 ✔**, **GH Pages 라이브** https://nnnano116.github.io/nano-portfolio/ → [`project-init.md`](./docs/project-init.md). **앱의 구체 목적·기능**은 추후.
 
 ---
 
@@ -53,7 +53,7 @@ ppp/
 ├─ src/                   ✅ main.tsx(해시 라우터)·App.tsx·assets·*.css
 ├─ public/               ✅ favicon.svg·icons.svg
 ├─ vite.config.ts        ✅ base:'/nano-portfolio/'·plugin-react
-├─ package.json          ✅ react 19·vite 8·react-router 7.18(→24업 후 8)·ts 6
+├─ package.json          ✅ react 19·vite 8·react-router 8.0.1·ts 6
 ├─ tsconfig*.json        ✅ (app·node 분리)
 ├─ eslint.config.js      ✅ flat config
 ├─ .github/workflows/    ✅ deploy.yml (Actions 자동 배포)
@@ -154,11 +154,11 @@ CLAUDE.md §3 (대분류 분류)
 
 ## 5. 다음 단계
 
-0. ✅ **MCP 연결**(D-1) + **버전 고정**(D-2/D-3) + **프로젝트 초기화·빌드 검증** 완료 → [`project-init.md`](./docs/project-init.md).
-1. **(다음)** 로컬 Node 22.20.0 → **24.17.0 LTS 업그레이드** 후 `npm i react-router@latest`(→8.0.1) — 고정 버전 정합.
-2. 스캐폴드 산출물 **커밋·푸시**(사용자 확인 후) → GitHub **Settings → Pages → Source: GitHub Actions** → 첫 배포.
-3. **앱 개발 시작**(Vibe 코딩): `npm run dev` → `src/App.tsx`부터. → 허브 **A** [`dev-stack.md`](./docs/dev-stack.md).
+0. ✅ **MCP 연결**(D-1) + **버전 고정**(D-2/D-3) + **초기화·빌드 검증** + **커밋·푸시** + **GH Pages 첫 배포(라이브)** 완료.
+1. ✅ 로컬 Node **24.17.0 업그레이드** + `react-router@8.0.1` 상향 + lockfile 갱신 완료(빌드 검증).
+2. **(다음)** **앱 개발 시작**(Vibe 코딩): `npm run dev` → `src/App.tsx`부터. → 허브 **A** [`dev-stack.md`](./docs/dev-stack.md) · 구조 계획 [`portfolio-plan.md`](./docs/portfolio-plan.md).
+3. 변경 푸시 시 Actions가 자동 재배포(→ 라이브 URL 갱신).
 4. 앱 목적/기능이 정해지면 §30초요약·대분류 표를 확장(필요 시 새 허브 추가).
 
-> 현재까지 확정: **스택·문서·git/`.env` 규약·허브 구조·MCP·버전 고정·앱 스캐폴드(빌드 검증)**.
-> 다음: **로컬 Node 24 업그레이드 · 커밋/푸시 · 첫 배포 · 앱 개발**(사용자 진행). 커밋·푸시는 사용자 확인 후.
+> 확정: **스택·문서·허브·MCP·버전 고정·앱 스캐폴드·배포 파이프라인(라이브)**.
+> 다음: **앱 개발**(Vibe 코딩). 커밋·푸시는 사용자 확인 후.
