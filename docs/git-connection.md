@@ -19,8 +19,9 @@
 | 저장소 모델 | **프로젝트 페이지** ([`git-setup.md §1`](./git-setup.md)) |
 | 기본 브랜치 | `main` (`origin/main` 추적) |
 | 원격(`origin`) | `https://github.com/NNNano116/nano-portfolio.git` |
-| 향후 배포 URL | `https://NNNano116.github.io/nano-portfolio/` |
-| 향후 `base` | `'/nano-portfolio/'` (→ 허브 **B** [`deploy.md`](./deploy.md)) |
+| 배포 URL | **`https://NNNano116.github.io/nano-portfolio/`** ✅ 라이브(HTTP 200) |
+| `base` | `'/nano-portfolio/'` 적용됨 (`vite.config.ts`) → 허브 **B** [`deploy.md`](./deploy.md) |
+| Pages | **활성화됨** — Source `GitHub Actions`(`build_type=workflow`), HTTPS 강제. 첫 배포 성공(2026-06-22) |
 | 첫 커밋 | `9be5131` (허브 문서 + git/.env 규약 초기 커밋) |
 
 ## 2. 인증 방식 (현행)
@@ -80,7 +81,7 @@ git ls-files | grep -E "^\.env$"
 - [x] PAT 를 원격 URL·코드·`dist/` 에 박지 않음 (gh keyring 사용)
 - [x] `.env.example` 은 키 이름만(값 없음) 추적
 - [x] 첫 커밋·푸시 완료, `main` ↔ `origin/main` 추적
-- [ ] (배포 단계) CI 비밀은 Actions Secrets 로 — 배포 토큰은 `GITHUB_TOKEN` 자동(대개 불필요) → 허브 **B**
+- [x] **GitHub Pages 활성화 + 첫 배포 성공** (Actions `deploy.yml`, `GITHUB_TOKEN` 자동) → 허브 **B**
 
 ## 8. 정본 / 연계
 
