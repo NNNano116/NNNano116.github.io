@@ -4,17 +4,16 @@
 > 이 파일은 **상시 공통 규칙 + 작업 대분류 인덱스(§3) + docs 허브 구조화 규약(§4)** 을 담는 **허브**입니다.
 > 각 대분류의 세부 내용은 **가이드 허브**(`docs/guide/_hub_*.md`)가 보유합니다(§3 표에서 진입).
 
-> 🟡 **현재 상태**: 스택(React+Vite+GH Pages)·개발 스킬 문서·git/`.env` 규약은 **확정**.
-> **MCP**: `context7` 연결됨(D-1, 최신 문서·버전 조회용) → [`mcp-setup.md`](./docs/mcp-setup.md).
-> **앱의 구체 목적·기능**과 **도구 버전 고정**은 **추후**(버전은 context7 조회 → 허브 **D**의 D-2 에서 확정).
-> **임의로 버전을 박거나 프로젝트 앱 코드를 생성하지 않습니다.**
+> 🟡 **현재 상태**: 스택(React+Vite+GH Pages)·개발 스킬 문서·git/`.env` 규약 **확정**.
+> **MCP**: `context7` 연결됨(D-1). **버전 고정**(D-2/D-3, 2026-06-22): Node 24.17.0 · React 19.2.7 · Vite 8.0.16 · TS 6.0.3 · react-router 7.18(→Node24 후 8.0.1) · npm → SSOT [`mcp-setup.md`](./docs/mcp-setup.md).
+> ✅ **프로젝트 초기화 완료**(스캐폴드+`base`+해시 라우터+`deploy.yml`, **빌드 검증 ✔**) → [`project-init.md`](./docs/project-init.md). **앱의 구체 목적·기능**은 추후.
 
 ---
 
 ## ⚡ 30초 요약
 
 - **무엇**: _(앱 목적 미정)_ — React 컴포넌트 기반 정적 사이트.
-- **스택**: **React + Vite** (로컬 dev → `vite build` → `dist/`). 🟡 버전은 추후 고정.
+- **스택**: **React 19 + Vite 8 + TS 6** (로컬 dev → `vite build` → `dist/`). ✅ 버전 고정·초기화 완료 → [`project-init.md`](./docs/project-init.md).
 - **운영**: GitHub Pages **정적 배포**. 서버(백엔드·DB) 없음. → §1
 - **워크플로**: 로컬 **Vibe 코딩**(HMR 반복) → git 푸시 → **Actions 자동 빌드·배포** 또는 정적 빌드본 수동 업로드.
 - **자격정보**: **`.env`**(로컬·미추적)로 git/토큰 관리 → 허브 **C**.
@@ -40,31 +39,34 @@
 
 ---
 
-## 🗂 2. 파일 구조 (예정)
+## 🗂 2. 파일 구조 (초기화 완료 ✅)
 
 ```
 ppp/
 ├─ CLAUDE.md               ← (이 파일) 프로젝트 허브 = 대분류 인덱스
-├─ .gitignore             ✅ 생성됨 (.env·node_modules·dist 제외)
-├─ .env.example           ✅ 생성됨 (자격정보 템플릿 / .env 는 로컬·미추적)
+├─ .gitignore             ✅ (.env·node_modules·dist 제외)
+├─ .env.example           ✅ (자격정보 템플릿 / .env 는 로컬·미추적)
 ├─ README.md               ← 실행/배포 안내 (추후)
 │
-│  ── 아래는 프로젝트 초기화 시 생성 (🟡 버전·명령은 허브 D 확정 후) ──
-├─ index.html              ← Vite 진입
-├─ src/                    ← main·App·components·pages·assets·styles
-├─ public/                 ← 그대로 복사되는 정적 파일
-├─ vite.config.*           ← base·플러그인 (배포와 직결)
-├─ package.json            ← 의존성·스크립트
-├─ .github/workflows/      ← deploy.yml (Actions 자동 배포)
+│  ── 앱 코드: Vite react-ts 스캐폴드 (2026-06-22, 빌드 검증 ✔) ──
+├─ index.html             ✅ Vite 진입
+├─ src/                   ✅ main.tsx(해시 라우터)·App.tsx·assets·*.css
+├─ public/               ✅ favicon.svg·icons.svg
+├─ vite.config.ts        ✅ base:'/nano-portfolio/'·plugin-react
+├─ package.json          ✅ react 19·vite 8·react-router 7.18(→24업 후 8)·ts 6
+├─ tsconfig*.json        ✅ (app·node 분리)
+├─ eslint.config.js      ✅ flat config
+├─ .github/workflows/    ✅ deploy.yml (Actions 자동 배포)
+│  (node_modules/·dist/ 는 생성물·미추적)
 │
 └─ docs/                  ✅ 생성됨
    ├─ guide/_hub_dev.md · _hub_deploy.md · _hub_git.md · _hub_mcp.md
    ├─ guide/trigger_index.md   ← 대분류 ↔ 허브 ↔ 정본 라우팅 맵
-   ├─ dev-stack.md · deploy.md · git-setup.md · mcp-setup.md  ← 정본
+   ├─ dev-stack.md · deploy.md · git-setup.md · git-connection.md · mcp-setup.md · project-init.md · portfolio-plan.md  ← 정본
    └─ README.md                ← 문서 인덱스
 ```
 
-> ✅ = 이미 생성. 나머지(`src/`·`vite.config`·`package.json` 등 앱 코드)는 **버전 확정(허브 D) 후** 초기화.
+> ✅ = 생성 완료. 앱 코드는 [`docs/project-init.md`](./docs/project-init.md) 절차로 스캐폴드·설정·빌드 검증됨.
 
 ---
 
@@ -80,7 +82,7 @@ ppp/
 | **A. 로컬 개발·React·Vibe 코딩** | React·Vite·`dev`/HMR·`src/`·컴포넌트·라우팅·에셋 import·Vibe 코딩 반복 | [`_hub_dev.md`](./docs/guide/_hub_dev.md) |
 | **B. 빌드·GitHub Pages 정적 배포** ⚠️ | `vite build`·`dist/`·`base`·SPA 404·`vite preview`·Actions `deploy.yml`·정적 빌드본 업로드·`gh-pages` | [`_hub_deploy.md`](./docs/guide/_hub_deploy.md) |
 | **C. Git 연계·`.env` 자격정보** ⚠️ | `git init`/원격/푸시·브랜치·`.gitignore`·`.env`/PAT·`gh` CLI·Actions Secrets | [`_hub_git.md`](./docs/guide/_hub_git.md) |
-| **D. MCP·도구 설정·버전 고정** 🟡 | MCP 서버·Node/Vite/React **버전 고정**·스캐폴드 명령·최신 액션 버전 *(추후 작성)* | [`_hub_mcp.md`](./docs/guide/_hub_mcp.md) |
+| **D. MCP·도구 설정·버전 고정** ✅ | MCP 서버·Node/Vite/React **버전 고정**·스캐폴드·최신 액션 버전·**초기화 런북** | [`_hub_mcp.md`](./docs/guide/_hub_mcp.md) |
 
 > 각 허브가 자기 대분류의 **전체 트리거 키워드 + 세부 도메인 목차 + 실제 확인사항**을 보유.
 > 라우팅 맵: [`docs/guide/trigger_index.md`](./docs/guide/trigger_index.md). 개발 스킬 전반: [`docs/README.md`](./docs/README.md).
@@ -152,12 +154,11 @@ CLAUDE.md §3 (대분류 분류)
 
 ## 5. 다음 단계
 
-0. ✅ **MCP 설정 시작**: `context7` 연결(D-1). 최신 문서·버전 조회 도구 확보 → [`mcp-setup.md`](./docs/mcp-setup.md).
-1. **(다음)** context7 로 **최신 버전 조회** → 허브 **D** [`mcp-setup.md`](./docs/guide/_hub_mcp.md) 의
-   **D-2 버전 고정표**(Node·Vite·React 버전, 스캐폴드 명령, Actions YAML) 작성.
-2. 그 시점에 `dev-stack.md`·`deploy.md` 의 "🟡 버전 추후 고정" 항목과 §1 표기를 함께 갱신(SSOT).
-3. 버전 확정 후 **프로젝트 초기화**(`src/`·`vite.config`·`package.json`·`.github/workflows/`) 진행.
+0. ✅ **MCP 연결**(D-1) + **버전 고정**(D-2/D-3) + **프로젝트 초기화·빌드 검증** 완료 → [`project-init.md`](./docs/project-init.md).
+1. **(다음)** 로컬 Node 22.20.0 → **24.17.0 LTS 업그레이드** 후 `npm i react-router@latest`(→8.0.1) — 고정 버전 정합.
+2. 스캐폴드 산출물 **커밋·푸시**(사용자 확인 후) → GitHub **Settings → Pages → Source: GitHub Actions** → 첫 배포.
+3. **앱 개발 시작**(Vibe 코딩): `npm run dev` → `src/App.tsx`부터. → 허브 **A** [`dev-stack.md`](./docs/dev-stack.md).
 4. 앱 목적/기능이 정해지면 §30초요약·대분류 표를 확장(필요 시 새 허브 추가).
 
-> 현재까지 확정: **스택·개발 스킬 문서·git/`.env` 규약·허브 구조·MCP(context7)**.
-> 보류: **도구 버전 고정·앱 코드 생성**(D-2 이후). 임의 진행하지 않습니다.
+> 현재까지 확정: **스택·문서·git/`.env` 규약·허브 구조·MCP·버전 고정·앱 스캐폴드(빌드 검증)**.
+> 다음: **로컬 Node 24 업그레이드 · 커밋/푸시 · 첫 배포 · 앱 개발**(사용자 진행). 커밋·푸시는 사용자 확인 후.

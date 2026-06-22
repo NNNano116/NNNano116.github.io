@@ -2,7 +2,7 @@
 
 > 로컬 개발물을 **Vite 로 정적 빌드(`dist/`)** 하여 **GitHub Pages** 로 서빙한다.
 > 두 가지 배포 방식을 모두 지원: **(A) GitHub Actions 자동 배포(권장)**, **(B) 정적 빌드본 수동 업로드**.
-> 🟡 도구 버전·명령 세부는 추후 최신 가이드에서 확정.
+> ✅ 도구·액션 버전 확정됨(2026-06-22) → [`mcp-setup.md` D-2](./mcp-setup.md)(SSOT).
 
 ---
 
@@ -44,11 +44,11 @@
 흐름: **push → Actions 가 `build` → `dist/` 를 Pages 에 배포.**
 
 1. 저장소 **Settings → Pages → Source: GitHub Actions** 선택.
-2. `.github/workflows/deploy.yml` 추가 — 단계 개요:
-   - checkout → Node 설정(LTS) → 의존성 설치 → `build` → (필요 시 `404.html` 복사) → `actions/upload-pages-artifact` → `actions/deploy-pages`.
+2. `.github/workflows/deploy.yml` 추가 — 단계 개요(액션 태그는 [`mcp-setup.md` D-2](./mcp-setup.md), 조회 2026-06-22):
+   - `actions/checkout@v7` → `actions/setup-node@v6`(`node-version: 24`) → `npm ci` → `npm run build` → (필요 시 `404.html` 복사) → `actions/configure-pages@v6` → `actions/upload-pages-artifact@v5` → `actions/deploy-pages@v5`.
 3. push 시 자동 빌드·배포. **자격증명 불필요** — Actions 의 `GITHUB_TOKEN` 자동 사용(로컬 `.env` 와 무관).
 
-> 워크플로 YAML 전문은 최신 액션 버전에 맞춰 **MCP/최신 가이드 단계에서 확정**(액션 버전이 자주 바뀜).
+> 액션 버전의 SSOT 는 [`mcp-setup.md` D-2](./mcp-setup.md). 갱신 시 그 표를 먼저 고친다.
 
 ## 6. 방식 B — 정적 빌드본 수동 업로드
 

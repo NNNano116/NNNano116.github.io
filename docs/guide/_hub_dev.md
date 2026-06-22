@@ -10,7 +10,7 @@
 React · Vite · `dev` 서버 · HMR · `src/` · `components/` · `pages`/`routes` ·
 `main.(jsx|tsx)` · `App` · 컴포넌트 작성 · 상태(`useState`/`useEffect`) · 라우팅(해시) ·
 TypeScript 여부 · 에셋 `import`/상대경로 · `public/` · Vibe 코딩 · `preview`(프로덕션 미리보기) ·
-Node LTS · npm/pnpm
+Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects/Contact)·슬라이더·`RootLayout`/`Outlet`**
 
 ## 2. 세부 도메인 목차
 
@@ -20,10 +20,11 @@ Node LTS · npm/pnpm
 | A-2 | 로컬 환경 준비 | 설치·스캐폴드·dev 기동 | [dev-stack §2](../dev-stack.md) |
 | A-3 | 프로젝트 구조 | `src/`·`components/`·`public/`·에셋 규약 | [dev-stack §3](../dev-stack.md) |
 | A-4 | Vibe 코딩 루프 | HMR 반복·AI 보조 즉시 검증·작은 단위 | [dev-stack §4](../dev-stack.md) |
+| A-5 | **포트폴리오 앱 구조** | 멀티 라우트(해시)·페이지(Home/About/Projects/Contact)·슬라이더 | [portfolio-plan](../portfolio-plan.md) 🟡 |
 
 ## 3. 실제 확인사항 (작업 전 체크리스트)
 
-- [ ] 🟡 버전을 새로 박지 말 것 — 고정은 "MCP 설정 + 최신 가이드" 단계 → [`mcp-setup.md`](../mcp-setup.md).
+- [x] ✅ 버전 확정됨(Node 24·React 19.2.7·Vite 8.0.16·TS 6.0.3·react-router 8.0.1) → SSOT [`mcp-setup.md` D-2](../mcp-setup.md). 변경 시 그 표 먼저 갱신.
 - [ ] 에셋은 `import` 또는 상대경로로. **절대경로(`/img.png`) 금지**(배포 base 와 충돌) → 허브 **B**.
 - [ ] 라우팅을 추가하면 **새로고침/직접진입**을 로컬에서 테스트(배포 404 함정과 직결) → 허브 **B**.
 - [ ] 정적 전제를 깨는 변경(서버 호출·런타임 비밀 등)은 운영 모델([CLAUDE.md §1](../../CLAUDE.md))과 충돌 → 먼저 점검.
@@ -32,8 +33,8 @@ Node LTS · npm/pnpm
 
 ## 4. 정본 / 소스
 
-- 정본: [`dev-stack.md`](../dev-stack.md)
-- 소스(추후 생성): `src/**`, `index.html`, `vite.config.*`
+- 정본: [`dev-stack.md`](../dev-stack.md) · **초기화·설정 절차**: [`project-init.md`](../project-init.md) · **앱 구조·계획**: [`portfolio-plan.md`](../portfolio-plan.md) 🟡
+- 소스: `src/**`, `index.html`, `vite.config.ts`, `package.json`
 
 ## 5. 자주 함께 걸리는 대분류
 

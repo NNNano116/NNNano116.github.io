@@ -1,7 +1,7 @@
-# MCP · 도구 설정 (정본) — 🟡 작성 중
+# MCP · 도구 설정 (정본) — 버전 고정표 포함
 
-> **상태: 진행 중.** MCP 서버(D-1) 일부 확정. **버전 고정표(D-2)·스캐폴드(D-3)는 아직 미확정** —
-> 아래 Context7 로 최신 버전을 조회한 뒤 확정한다. 그 전까지 버전·명령을 임의로 박지 않는다.
+> **상태: D-1(MCP)·D-2(버전 고정)·D-3(스캐폴드) 확정 + 초기화 실행 완료(빌드 검증 ✔, 2026-06-22).**
+> 이 문서가 **버전의 단일 출처(SSOT)**. 실행 절차·결과는 [`project-init.md`](./project-init.md). `dev-stack.md`·`deploy.md`·`CLAUDE.md` 는 이 표를 참조·링크.
 
 ---
 
@@ -24,15 +24,68 @@ claude mcp add --scope user --transport http context7 https://mcp.context7.com/m
   ```
 - 사용법: 프롬프트에 `use context7` 또는 라이브러리 ID 지정 시 최신 공식 문서를 가져온다.
 
-### 사용 환경 (참고, 미고정)
-- Node `v22.20.0` · npm `10.9.3` (현재 로컬 환경 — D-2 에서 **고정 여부** 결정).
+---
+
+## 버전 고정표 (D-2) ✅ — SSOT
+
+> 조회일 **2026-06-22** (npm 레지스트리 + GitHub releases + nodejs.org). 결정: TypeScript · npm · Node 24 LTS · 라우팅 포함.
+
+### 런타임·도구
+| 항목 | 고정 | 비고 |
+|------|------|------|
+| **Node.js** | **24.17.0** (24 LTS "Krypton") | Active LTS. Vite 8(`>=22.12`) **및 react-router 8(`>=22.22.0`)** 동시 충족. **로컬·CI 동일 고정**(로컬 22.20.0 < 22.22.0 → **24 업그레이드 권장**; init 자체는 22.20.0에서도 동작하나 엔진 경고) |
+| **패키지 매니저** | **npm** (Node 24 동봉 11.x) | 추가 설치 불필요 |
+| **TypeScript** | **6.0.3** | react-ts 템플릿 |
+
+### 런타임 의존성 (dependencies)
+| 패키지 | 고정 | 비고 |
+|--------|------|------|
+| **react** / **react-dom** | **19.2.7** | React 19. React Compiler v1 정식(옵션) |
+| **react-router** | 타깃 **8.0.1** / 현재 설치 **7.18.0** | ⚠️ v7부터 `react-router`로 통합(`react-router-dom`은 7.18.0 호환용 재export). 신규는 **`react-router` 직접 설치**. 최신 **8.0.1은 Node `>=22.22.0` 요구** → **로컬 22.20.0에서 `npm i react-router` 가 engine-aware로 7.18.0 자동 선택**(✔ 빌드 검증됨). **Node 24 업그레이드 후 `npm i react-router@latest` → 8.0.1**. API(`createHashRouter`)는 7/8 동일. 해시 라우팅으로 GH Pages 404 회피 → [`deploy.md §4`](./deploy.md) |
+
+### 개발 의존성 (devDependencies)
+| 패키지 | 고정 | 비고 |
+|--------|------|------|
+| **vite** | **8.0.16** | Node `^20.19 \|\| >=22.12` 요구 |
+| **@vitejs/plugin-react** | **6.0.2** | peer `vite ^8.0.0`. SWC 선호 시 `@vitejs/plugin-react-swc 4.3.1` 대체 가능 |
+| **typescript** | **6.0.3** | (위 도구 항목과 동일) |
+
+## 스캐폴드 명령 (D-3) ✅
+
+루트에 **기존 파일(`docs/`·`CLAUDE.md`·`.env`·`.git`)이 있으므로** 직접 `.`에 스캐폴드하지 않고 **임시 디렉터리 → 병합** 방식을 쓴다(덮어쓰기 방지). 상세 절차는 [`project-init.md`](./project-init.md).
+
+```sh
+# 1) 임시 디렉터리에 최신 템플릿 생성 (create-vite 9.x)
+npm create vite@latest .vite-tmp -- --template react-ts
+# 2) 생성물(src/·public/·index.html·package.json·tsconfig*·vite.config.ts 등)만 루트로 이동
+#    (.gitignore/README 등 기존 파일은 보존) → 3) .vite-tmp 삭제
+# 4) 의존성 설치 + 라우터
+npm install
+npm install react-router       # 8.x (react-router-dom 아님)
+npm run dev                    # HMR dev 서버
+```
+- 기본 플러그인은 `@vitejs/plugin-react`(Babel). SWC 원하면 템플릿 `react-swc-ts`.
+- 초기화 후 `vite.config.ts` 의 **`base: '/nano-portfolio/'`** 적용(프로젝트 페이지) → [`deploy.md §2`](./deploy.md)·[`git-connection.md`](./git-connection.md).
+
+## GitHub Actions 버전 (배포 — D-2 일부) ✅
+
+`.github/workflows/deploy.yml` 에서 사용할 액션 태그(조회 2026-06-22):
+
+| 액션 | 태그 | 용도 |
+|------|------|------|
+| `actions/checkout` | **v7** | 소스 체크아웃 |
+| `actions/setup-node` | **v6** | `node-version: 24` |
+| `actions/configure-pages` | **v6** | Pages 설정 |
+| `actions/upload-pages-artifact` | **v5** | `dist/` 아티팩트 업로드 |
+| `actions/deploy-pages` | **v5** | Pages 배포 |
+
+> YAML 전문은 프로젝트 초기화(`.github/workflows/`) 시 [`deploy.md §5`](./deploy.md) 절차대로 작성.
 
 ## 남은 항목 (예정)
 
-- [ ] 추가 MCP 서버 필요 시 (GitHub 등) 위 표에 추가
-- [ ] 도구/런타임 **버전 고정표** — Node·Vite·React·패키지매니저 등 (Context7 로 최신 조회 후 확정)
-- [ ] 프로젝트 스캐폴드 명령 확정 (`npm create vite@latest …` 등 최신 플래그)
-- [ ] 로컬 ↔ MCP ↔ git/배포 연동 흐름
+- [ ] 추가 MCP 서버 필요 시 (GitHub 등) D-1 표에 추가
+- [ ] 버전 갱신 시 이 표를 먼저 고치고(SSOT) `dev-stack.md`·`deploy.md`·`CLAUDE.md` 동기화
+- [ ] 프로젝트 초기화(스캐폴드 실행) — 아직 미수행 (사용자 확인 후)
 
 ## 확정 시 반영할 곳
 

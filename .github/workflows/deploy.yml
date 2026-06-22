@@ -1,0 +1,44 @@
+name: Deploy to GitHub Pages
+
+# main 푸시 시 Vite 빌드 → GitHub Pages 자동 배포. (docs/deploy.md §5, docs/project-init.md §5)
+# 자격증명 불필요: Actions 의 GITHUB_TOKEN 자동 사용(로컬 .env 와 무관).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 동시 배포 1건만 — 진행 중이면 취소하고 최신으로.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24          # docs/mcp-setup.md D-2 (Node 24 LTS)
+          cache: npm
+      - run: npm ci
+      - run: npm run build          # tsc -b && vite build → dist/ (base=/nano-portfolio/)
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

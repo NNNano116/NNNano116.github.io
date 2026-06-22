@@ -34,12 +34,12 @@ GitHub Pages · `Settings → Pages` · GitHub Actions · `deploy.yml` ·
 - [ ] **비밀값을 빌드 산출에 넣지 않았는가** — 정적이라 클라이언트에 그대로 노출 → 허브 **C**.
 - [ ] 방식 A: Pages Source = "GitHub Actions" / 방식 B: `gh-pages` 브랜치로 푸시(자격증명 필요 → 허브 **C**).
 - [ ] 방식 B 에서 빌드 출력을 `docs/` 로 내보내 **문서 폴더와 충돌**시키지 않았는가(→ `gh-pages` 브랜치 권장).
-- [ ] 🟡 Actions YAML 의 액션 버전은 추후 최신 가이드에서 확정 → [`mcp-setup.md`](../mcp-setup.md).
+- [x] ✅ 액션 버전 확정: checkout@v7 · setup-node@v6(node 24) · configure-pages@v6 · upload-pages-artifact@v5 · deploy-pages@v5 → SSOT [`mcp-setup.md` D-2](../mcp-setup.md).
 
 ## 4. 정본 / 소스
 
-- 정본: [`deploy.md`](../deploy.md)
-- 소스(추후 생성): `vite.config.*`, `.github/workflows/deploy.yml`, `dist/`(생성물)
+- 정본: [`deploy.md`](../deploy.md) · **초기화 시 `base`·`deploy.yml` 작성 절차**: [`project-init.md`](../project-init.md)
+- 소스: `vite.config.ts`(`base`), `.github/workflows/deploy.yml`, `dist/`(생성물)
 
 ## 5. 자주 함께 걸리는 대분류
 

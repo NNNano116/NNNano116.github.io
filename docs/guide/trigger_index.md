@@ -7,10 +7,10 @@
 
 | 대분류 | 가이드 허브 | 정본 / 소스 |
 |--------|------------|------------|
-| **A. 로컬 개발·React·Vibe 코딩** | [`_hub_dev.md`](./_hub_dev.md) | `dev-stack.md` · `src/**`·`vite.config.*` |
+| **A. 로컬 개발·React·Vibe 코딩** | [`_hub_dev.md`](./_hub_dev.md) | `dev-stack.md` · `portfolio-plan.md`(앱 구조 계획 🟡) · `src/**`·`vite.config.*` |
 | **B. 빌드·GitHub Pages 정적 배포** | [`_hub_deploy.md`](./_hub_deploy.md) | `deploy.md` · `vite.config.*`·`.github/workflows/`·`dist/` |
-| **C. Git 연계·`.env` 자격정보** | [`_hub_git.md`](./_hub_git.md) | `git-setup.md` · `.gitignore`·`.env.example` |
-| **D. MCP·도구 설정·버전 고정** 🟡 | [`_hub_mcp.md`](./_hub_mcp.md) | `mcp-setup.md` *(D-1 context7 ✅ / 버전 고정 추후)* · `~/.claude.json` |
+| **C. Git 연계·`.env` 자격정보** | [`_hub_git.md`](./_hub_git.md) | `git-setup.md`(규약) · `git-connection.md`(현황 ✅) · `.gitignore`·`.env.example` |
+| **D. MCP·도구 설정·버전 고정** ✅ | [`_hub_mcp.md`](./_hub_mcp.md) | `mcp-setup.md`(버전 SSOT) · `project-init.md`(초기화 런북) · `~/.claude.json` |
 
 ## 자주 함께 걸리는 조합
 
@@ -30,4 +30,4 @@ CLAUDE.md §3 (대분류 분류)
 ```
 
 일반 작업은 **허브 수준에서 충분**하고, 세부 디테일이 필요할 때만 정본·소스로 내려간다.
-🟡 버전·명령 확정은 **D(MCP/최신 가이드)** 단계 전까지 보류한다.
+✅ 버전·스캐폴드 확정됨 → SSOT [`mcp-setup.md` D-2](../mcp-setup.md). 다음은 **프로젝트 초기화**(사용자 확인 후).

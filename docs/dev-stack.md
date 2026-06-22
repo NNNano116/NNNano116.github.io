@@ -1,31 +1,31 @@
 # 개발 스택 · 로컬 환경 · Vibe 코딩 (정본)
 
 > React + Vite 기반 정적 사이트. **로컬에서 개발 → GitHub 업로드 → 빌드 → GitHub Pages 배포**.
-> 🟡 **버전 고정은 추후** "MCP 설정 + 최신 가이드" 단계에서 확정합니다. 이 문서는 **절차·규약 중심**.
+> ✅ **버전 확정됨**(2026-06-22). 정확한 버전·스캐폴드는 [`mcp-setup.md` D-2](./mcp-setup.md)(SSOT). 이 문서는 **절차·규약 중심**.
 
 ---
 
 ## 1. 스택 개요
 
-| 영역 | 선택 | 비고 |
+| 영역 | 선택 | 고정 버전 (→ [mcp-setup D-2](./mcp-setup.md)) |
 |------|------|------|
-| UI 라이브러리 | **React** | 컴포넌트 기반. 버전은 추후 최신 안정(예: 19.x)으로 고정 |
-| 빌드/dev 서버 | **Vite** | 빠른 HMR, `dist/` 정적 산출. 버전 추후 고정 |
-| 언어 | JS 또는 **TypeScript** | TS 권장(자동완성·안정성). 추후 결정 |
-| 패키지 매니저 | npm / pnpm | 추후 택1 (pnpm 권장) |
-| 런타임 | **Node LTS** | 로컬·CI 동일 버전(예: 20/22 LTS). 추후 고정 |
-| 라우팅 | React Router(해시) 등 | GH Pages 새로고침 404 회피 정책과 연동 → [`deploy.md`](./deploy.md) |
+| UI 라이브러리 | **React** | **19.2.7** (react/react-dom) |
+| 빌드/dev 서버 | **Vite** | **8.0.16** (+ `@vitejs/plugin-react` 6.0.2) |
+| 언어 | **TypeScript** | **6.0.3** (react-ts 템플릿) |
+| 패키지 매니저 | **npm** | Node 24 동봉 11.x |
+| 런타임 | **Node 24 LTS** | **24.17.0** "Krypton" (로컬·CI 동일) |
+| 라우팅 | **React Router(해시)** | **react-router 8.0.1** (구 -dom 아님) → [`deploy.md §4`](./deploy.md) |
 
-> 위 "추후 고정" 항목들은 최신 가이드 작성 시 정확한 버전으로 채웁니다. 지금 임의 고정하지 않습니다.
+> 버전의 **단일 출처는 [`mcp-setup.md` D-2](./mcp-setup.md)**. 갱신 시 그 표를 먼저 고친다(SSOT).
 
 ## 2. 로컬 환경 준비 (절차)
 
-1. Node LTS 설치(버전 추후 확정).
-2. 프로젝트 초기화: Vite React 템플릿으로 스캐폴드(명령은 최신 가이드에서 확정).
-3. 의존성 설치 → `dev` 서버 기동 → 브라우저 HMR 확인.
-4. `.env` / `.gitignore` / git 원격 연결 → [`git-setup.md`](./git-setup.md).
+1. **Node 24.17.0 LTS** 설치(로컬 22.20.0 → 24 업그레이드). → [mcp-setup D-2](./mcp-setup.md)
+2. 프로젝트 초기화: `npm create vite@latest . -- --template react-ts` → [mcp-setup D-3](./mcp-setup.md).
+3. `npm install` → `npm run dev` 기동 → 브라우저 HMR 확인.
+4. `react-router-dom` 추가(해시 라우팅) · `.env` / `.gitignore` / git 원격 연결 → [`git-setup.md`](./git-setup.md).
 
-> 구체 명령(`npm create vite@latest …` 등)은 **버전·플래그가 바뀔 수 있어** 최신 가이드 단계에서 확정합니다.
+> 정확한 버전·스캐폴드 명령은 [`mcp-setup.md`](./mcp-setup.md)(SSOT) 참조.
 
 ## 3. 프로젝트 구조 (예정 규약)
 
@@ -69,4 +69,4 @@ ppp/
 
 - 빌드·배포: [`deploy.md`](./deploy.md) (허브 **B**)
 - Git·자격정보: [`git-setup.md`](./git-setup.md) (허브 **C**)
-- MCP·도구(추후): [`mcp-setup.md`](./mcp-setup.md) (허브 **D**, 🟡 TBD)
+- MCP·도구·**버전 고정표(SSOT)**: [`mcp-setup.md`](./mcp-setup.md) (허브 **D**) ✅
