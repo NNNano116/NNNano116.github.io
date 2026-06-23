@@ -21,6 +21,7 @@
 | 경로 | 페이지 | 내용(초안) |
 |------|--------|-----------|
 | `/` | **Home** | Hero + 스크롤/슬라이더 혼재(첫인상·하이라이트) |
+| `/main-1` | **Main-1** (실험·메인 후보) | 3D 구체 클러스터 물리 히어로(three.js). 마우스 반발·드래그 휩쓸기·클릭 버스트·중심 응집(자석)·부유·흐름(완만 회전)·구체 충돌. 상세 정본 [`main1-hero.md`](./main1-hero.md). 정식 메인 채택 시 `/`로 승격 검토. → `src/routes/Main1.tsx` |
 | `/about` | **About** | 소개·스킬·경력 |
 | `/projects` | **Projects** | 프로젝트 카드·슬라이더 (스크롤 분량 多) |
 | `/contact` | **Contact** | 이메일·GitHub `NNNano116`·외부 링크 |
@@ -44,6 +45,7 @@ src/
 ## 4. 컴포넌트·슬라이더 방침
 
 - **슬라이더**: 초기엔 무의존 **CSS scroll-snap** 권장(가벼움·빌드부담 적음). 효과가 더 필요하면 `swiper` 등 추가 검토(의존성 추가 시 [mcp-setup D-2](./mcp-setup.md) 표에 반영).
+- **3D/물리(main-1)**: `three` **0.184.0**(`RoomEnvironment` GI) — 캔버스 한 장 + `useEffect` 자체 물리 루프(외부 물리 라이브러리 無). 의존성·번들 영향은 [mcp-setup D-2](./mcp-setup.md) 표에 기록. 캔버스는 `alpha:true`(투명) → 배경 그라디언트는 CSS, 텍스트/크롬은 DOM 오버레이(`z-index`)로 캔버스 위에 둔다.
 - **에셋**: `import` 또는 상대경로만. **절대경로(`/img.png`, `/icons.svg`) 금지** — `base`와 충돌 → [CLAUDE.md §1](../CLAUDE.md).
 - **정적 전제 유지**: 서버 호출·런타임 비밀 없음(클라이언트 only) → [CLAUDE.md §1](../CLAUDE.md).
 

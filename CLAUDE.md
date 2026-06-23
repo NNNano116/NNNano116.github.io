@@ -5,7 +5,7 @@
 > 각 대분류의 세부 내용은 **가이드 허브**(`docs/guide/_hub_*.md`)가 보유합니다(§3 표에서 진입).
 
 > 🟡 **현재 상태**: 스택(React+Vite+GH Pages)·개발 스킬 문서·git/`.env` 규약 **확정**.
-> **MCP**: `context7` 연결됨(D-1). **버전 고정**(D-2/D-3): Node 24.17.0 · React 19.2.7 · Vite 8.0.16 · TS 6.0.3 · react-router 8.0.1 · npm 11 → SSOT [`mcp-setup.md`](./docs/mcp-setup.md).
+> **MCP**: `context7`·`playwright` 연결됨(D-1). **버전 고정**(D-2/D-3): Node 24.17.0 · React 19.2.7 · Vite 8.0.16 · TS 6.0.3 · react-router 8.0.1 · three 0.184.0 · npm 11 → SSOT [`mcp-setup.md`](./docs/mcp-setup.md).
 > ✅ **초기화·배포 완료**: 스캐폴드+`base`+해시 라우터+`deploy.yml`, **빌드 검증 ✔**, **GH Pages 라이브** https://nnnano116.github.io/nano-portfolio/ → [`project-init.md`](./docs/project-init.md). **앱의 구체 목적·기능**은 추후.
 
 ---
@@ -62,7 +62,7 @@ ppp/
 └─ docs/                  ✅ 생성됨
    ├─ guide/_hub_dev.md · _hub_deploy.md · _hub_git.md · _hub_mcp.md
    ├─ guide/trigger_index.md   ← 대분류 ↔ 허브 ↔ 정본 라우팅 맵
-   ├─ dev-stack.md · deploy.md · git-setup.md · git-connection.md · mcp-setup.md · project-init.md · portfolio-plan.md  ← 정본
+   ├─ dev-stack.md · local-run.md · deploy.md · git-setup.md · git-connection.md · mcp-setup.md · project-init.md · portfolio-plan.md  ← 정본
    └─ README.md                ← 문서 인덱스
 ```
 
@@ -156,7 +156,7 @@ CLAUDE.md §3 (대분류 분류)
 
 0. ✅ **MCP 연결**(D-1) + **버전 고정**(D-2/D-3) + **초기화·빌드 검증** + **커밋·푸시** + **GH Pages 첫 배포(라이브)** 완료.
 1. ✅ 로컬 Node **24.17.0 업그레이드** + `react-router@8.0.1` 상향 + lockfile 갱신 완료(빌드 검증).
-2. **(다음)** **앱 개발 시작**(Vibe 코딩): `npm run dev` → `src/App.tsx`부터. → 허브 **A** [`dev-stack.md`](./docs/dev-stack.md) · 구조 계획 [`portfolio-plan.md`](./docs/portfolio-plan.md).
+2. **(다음)** **앱 개발 시작**(Vibe 코딩): `npm run dev` → `src/App.tsx`부터. → 허브 **A** [`dev-stack.md`](./docs/dev-stack.md) · **로컬 빌드·실행·포트** [`local-run.md`](./docs/local-run.md)(dev 5173·preview 4173·`/nano-portfolio/` 접속) · 구조 계획 [`portfolio-plan.md`](./docs/portfolio-plan.md).
 3. 변경 푸시 시 Actions가 자동 재배포(→ 라이브 URL 갱신).
 4. 앱 목적/기능이 정해지면 §30초요약·대분류 표를 확장(필요 시 새 허브 추가).
 

@@ -10,10 +10,12 @@
 | 서버 | 용도 | 전송 | 범위 | 인증 | 상태 |
 |------|------|------|------|------|------|
 | **context7** | 라이브러리 **최신 문서·버전** 조회 (버전 고정 D-2 의 근거 소스) | HTTP (원격) | user (전 프로젝트) | API 키 없음(무료/저 rate limit) | ✔ Connected |
+| **playwright** | **실제 브라우저 조작·검증**(레퍼런스 사이트 탐색, 로컬 페이지 UI/UX 비교·스크린샷) | stdio (`npx @playwright/mcp@latest`) | user (전 프로젝트) | 없음 | ✔ Connected (2026-06-23) |
 
 **설치 명령** (재현용):
 ```sh
 claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp
+claude mcp add --scope user playwright npx @playwright/mcp@latest   # 첫 실행 시 npx 다운로드 → Chromium은 `npx playwright install chromium`
 ```
 - 원격 URL: `https://mcp.context7.com/mcp` · 패키지(로컬 대안): `@upstash/context7-mcp`
 - 설정 파일: `~/.claude.json` (user config). `.env`/git 와 무관(로컬 도구 인증).
@@ -42,6 +44,7 @@ claude mcp add --scope user --transport http context7 https://mcp.context7.com/m
 |--------|------|------|
 | **react** / **react-dom** | **19.2.7** | React 19. React Compiler v1 정식(옵션) |
 | **react-router** | **8.0.1** ✅ | v7부터 `react-router`로 통합(`react-router-dom` 아님). Node `>=22.22.0` 요구 → Node 24에서 설치 완료(✔ 빌드 검증). API: `createHashRouter`+`RouterProvider`(`react-router/dom`). 해시 라우팅으로 GH Pages 404 회피 → [`deploy.md §4`](./deploy.md) |
+| **three** | **0.184.0** ✅ (`--save-exact`) | `main-1` 히어로의 3D 구체 클러스터(물리·조명)용. `RoomEnvironment`(`three/examples/jsm`)로 GI. dev 의존성 **@types/three 0.184.1**. 번들 +약 500KB(gzip ≈ 220KB) → 코드분할은 추후 검토. → [`portfolio-plan.md §4`](./portfolio-plan.md) |
 
 ### 개발 의존성 (devDependencies)
 | 패키지 | 고정 | 비고 |

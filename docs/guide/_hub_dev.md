@@ -10,7 +10,9 @@
 React · Vite · `dev` 서버 · HMR · `src/` · `components/` · `pages`/`routes` ·
 `main.(jsx|tsx)` · `App` · 컴포넌트 작성 · 상태(`useState`/`useEffect`) · 라우팅(해시) ·
 TypeScript 여부 · 에셋 `import`/상대경로 · `public/` · Vibe 코딩 · `preview`(프로덕션 미리보기) ·
-Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects/Contact)·슬라이더·`RootLayout`/`Outlet`**
+Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects/Contact)·슬라이더·`RootLayout`/`Outlet`** ·
+**`npm run dev/build/preview` · 포트(5173/4173) · `--port`/`--host`/`--strictPort` · 로컬 접속 URL·`base` 경로 함정** ·
+**`three.js`·WebGL·캔버스·물리(파티클·충돌·반발)·`main-1` 히어로·마우스 인터랙션(`useEffect` 애니메이션 루프)·`requestAnimationFrame`**
 
 ## 2. 세부 도메인 목차
 
@@ -21,6 +23,8 @@ Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects
 | A-3 | 프로젝트 구조 | `src/`·`components/`·`public/`·에셋 규약 | [dev-stack §3](../dev-stack.md) |
 | A-4 | Vibe 코딩 루프 | HMR 반복·AI 보조 즉시 검증·작은 단위 | [dev-stack §4](../dev-stack.md) |
 | A-5 | **포트폴리오 앱 구조** | 멀티 라우트(해시)·페이지(Home/About/Projects/Contact)·슬라이더 | [portfolio-plan](../portfolio-plan.md) 🟡 |
+| A-6 | **로컬 빌드·실행·포트** | `npm run dev/build/preview`·dev 5173·preview 4173·`base` 접속 URL·포트 변경/충돌 | [local-run](../local-run.md) ✔ |
+| A-7 | **main-1 3D 물리 히어로** | `three.js` 씬·물리 루프(자석·부유·흐름·충돌·표면장력)·마우스/드래그/클릭 반응·속도 임계값 반발·튜닝 상수 | [main1-hero](../main1-hero.md) ✅ |
 
 ## 3. 실제 확인사항 (작업 전 체크리스트)
 
@@ -30,10 +34,13 @@ Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects
 - [ ] 정적 전제를 깨는 변경(서버 호출·런타임 비밀 등)은 운영 모델([CLAUDE.md §1](../../CLAUDE.md))과 충돌 → 먼저 점검.
 - [ ] AI 생성 코드도 **HMR 화면에서 실제 렌더 확인** 후 커밋.
 - [ ] 빌드 시점 차이를 보려면 `build` → `preview` 로 프로덕션 모드 점검 → 허브 **B**.
+- [ ] **로컬 접속 시 `base` 경로 붙이기**(`http://localhost:5173/nano-portfolio/`) — 루트는 빈 화면/404. 빌드·포트 상세 → [`local-run.md`](../local-run.md).
+- [ ] 포트는 **점유 시 자동 증가**할 수 있으니 기동 로그의 `Local:` URL 확인(5173 가정 금지).
+- [ ] **3D/물리(`main-1`)**: `three` 의존성은 [`mcp-setup.md` D-2](../mcp-setup.md) 버전표 우선 갱신. 언마운트 시 rAF·리스너·geometry/material/renderer **dispose** 필수. 물리 튜닝은 [`main1-hero.md`](../main1-hero.md) 상수표와 동기화. 상세 → [`main1-hero.md`](../main1-hero.md).
 
 ## 4. 정본 / 소스
 
-- 정본: [`dev-stack.md`](../dev-stack.md) · **초기화·설정 절차**: [`project-init.md`](../project-init.md) · **앱 구조·계획**: [`portfolio-plan.md`](../portfolio-plan.md) 🟡
+- 정본: [`dev-stack.md`](../dev-stack.md) · **로컬 빌드·실행·포트**: [`local-run.md`](../local-run.md) ✔ · **초기화·설정 절차**: [`project-init.md`](../project-init.md) · **앱 구조·계획**: [`portfolio-plan.md`](../portfolio-plan.md) 🟡 · **main-1 3D 물리 히어로**: [`main1-hero.md`](../main1-hero.md) ✅
 - 소스: `src/**`, `index.html`, `vite.config.ts`, `package.json`
 
 ## 5. 자주 함께 걸리는 대분류
