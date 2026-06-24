@@ -7,7 +7,7 @@
 
 | 대분류 | 가이드 허브 | 정본 / 소스 |
 |--------|------------|------------|
-| **A. 로컬 개발·React·Vibe 코딩** | [`_hub_dev.md`](./_hub_dev.md) | `dev-stack.md` · `local-run.md`(빌드·실행·포트 ✔) · `portfolio-plan.md`(앱 구조 계획 🟡) · `main1-hero.md`(main-1 3D 물리 히어로 ✅) · `src/**`·`vite.config.*`·`package.json` |
+| **A. 로컬 개발·React·Vibe 코딩** | [`_hub_dev.md`](./_hub_dev.md) | `dev-stack.md` · `local-run.md`(빌드·실행·포트 ✔) · `portfolio-plan.md`(앱 구조 계획 🟡) · `main1-hero.md`(main-1 3D 물리 히어로 ✅) · `main1-scroll-interactions.md`(스크롤 전환·색반전·다국어·스냅·글라스 ✅) · `src/**`·`vite.config.*`·`package.json` |
 | **B. 빌드·GitHub Pages 정적 배포** | [`_hub_deploy.md`](./_hub_deploy.md) | `deploy.md` · `local-run.md`(로컬 빌드·preview 포트 ✔) · `vite.config.*`·`.github/workflows/`·`dist/` |
 | **C. Git 연계·`.env` 자격정보** | [`_hub_git.md`](./_hub_git.md) | `git-setup.md`(규약) · `git-connection.md`(현황 ✅) · `.gitignore`·`.env.example` |
 | **D. MCP·도구 설정·버전 고정** ✅ | [`_hub_mcp.md`](./_hub_mcp.md) | `mcp-setup.md`(버전 SSOT) · `project-init.md`(초기화 런북) · `~/.claude.json` |

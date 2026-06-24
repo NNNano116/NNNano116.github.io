@@ -14,7 +14,8 @@ Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects
 **`npm run dev/build/preview` · 포트(5173/4173) · `--port`/`--host`/`--strictPort` · 로컬 접속 URL·`base` 경로 함정** ·
 **`three.js`·WebGL·캔버스·물리(파티클·충돌·반발)·`main-1` 히어로·마우스 인터랙션(`useEffect` 애니메이션 루프)·`requestAnimationFrame`** ·
 **배경 레이저(2D 캔버스·대각선·63.1°·드리프트·모바일 우하단 커버)·드래그 안내 인디케이터(마우스 캡슐+네온 화살표·`stroke-dashoffset`·SVG 키프레임)·mattwilldev.com 레퍼런스·Playwright 픽셀 측정** ·
-**`nano-portfolio` 타이틀·서브타이틀 순환·키네틱 타이포(`token-in` blur+slide)·마우스 패럴럭스·구체 인트로 생성(scale·리플·`er` 충돌·펼침)·모바일 반응형(`clamp`·`vw`·`pointer:coarse`·입력환경별 라벨 CLICK·SCROLL/TOUCH & DRAG)·푸터 제거**
+**`nano-portfolio` 타이틀·서브타이틀 순환·키네틱 타이포(`token-in` blur+slide)·마우스 패럴럭스·구체 인트로 생성(scale·리플·`er` 충돌·펼침)·모바일 반응형(`clamp`·`vw`·`pointer:coarse`·입력환경별 라벨 CLICK·SCROLL/TOUCH & DRAG)·푸터 제거** ·
+**스크롤 인터랙션(3페이지 1-라우트·`--inv` 다크↔라이트 색 반전·3/5 트리거·듀얼레이어 크로스페이드)·명칭 모프+섹션 타이틀 핸드오프(`is-light`/`is-settled`)·다국어 11개 순환+단어별 rise(`titleIn` transition)·임계 스프링 스냅(0.3·방향 인지·`cancelSnap`)·라이트 글라스(`backdrop-filter`)·J·Young 로고·반응형(구체 widthShrink·≤1300 서브타이틀 우측하단)**
 
 ## 2. 세부 도메인 목차
 
@@ -32,6 +33,7 @@ Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects
 | A-10 | **main-1 배경 레이저** | 2D 캔버스·고정 63.1°·`min(W·0.07,150)`·상단 가장자리 앵커+좌하 연장·드리프트·헤드 점·커서 밝힘·**모바일 우하단 커버(`driftRange=W·1.08+H·0.55`)** | [main1-hero §9](../main1-hero.md) ✅ |
 | A-11 | **main-1 드래그 안내** | SVG `stroke-dashoffset` draw/erase·마우스+네온 라인+화살표·루프 4s·**입력환경별 라벨(CLICK·SCROLL/TOUCH & DRAG)**·**반응형 크기(`clamp`)** | [main1-hero §10](../main1-hero.md) ✅ |
 | A-12 | **main-1 모바일 반응형** | 레이저 우하단 커버·서브타이틀 좌측 이동·패럴럭스(터치 비활성)·드래그 안내 `clamp` 축소·입력환경별 문구·푸터 제거 | [main1-hero §11](../main1-hero.md) ✅ |
+| A-13 | **main-1 스크롤 인터랙션** | 3페이지 1-라우트·`--inv` 색 반전(3/5)·명칭 모프+핸드오프·다국어 11개+단어 rise·임계 스냅(0.3)·글라스·반응형 | [main1-scroll-interactions](../main1-scroll-interactions.md) ✅ |
 
 ## 3. 실제 확인사항 (작업 전 체크리스트)
 
@@ -48,7 +50,7 @@ Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects
 
 ## 4. 정본 / 소스
 
-- 정본: [`dev-stack.md`](../dev-stack.md) · **로컬 빌드·실행·포트**: [`local-run.md`](../local-run.md) ✔ · **초기화·설정 절차**: [`project-init.md`](../project-init.md) · **앱 구조·계획**: [`portfolio-plan.md`](../portfolio-plan.md) 🟡 · **main-1 3D 물리 히어로**: [`main1-hero.md`](../main1-hero.md) ✅
+- 정본: [`dev-stack.md`](../dev-stack.md) · **로컬 빌드·실행·포트**: [`local-run.md`](../local-run.md) ✔ · **초기화·설정 절차**: [`project-init.md`](../project-init.md) · **앱 구조·계획**: [`portfolio-plan.md`](../portfolio-plan.md) 🟡 · **main-1 3D 물리 히어로**: [`main1-hero.md`](../main1-hero.md) ✅ · **main-1 스크롤 인터랙션**: [`main1-scroll-interactions.md`](../main1-scroll-interactions.md) ✅
 - 소스: `src/**`, `index.html`, `vite.config.ts`, `package.json`
 
 ## 5. 자주 함께 걸리는 대분류
