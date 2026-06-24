@@ -5,10 +5,32 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  /* 원본 배경: 페리윙클 그라디언트(위 밝음 → 아래 짙은 블루) */
-  background: linear-gradient(to bottom, #aeb9d4 0%, #8294b8 60%, #788cb0 100%);
+  /* 배경(mattwilldev.com 참조): 상단 청록 → 아래로 짙은 네이비 + 하단 비네팅 */
+  background:
+    radial-gradient(130% 90% at 50% 115%, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 55%),
+    radial-gradient(140% 120% at 50% -5%, #1a2e35 0%, #122027 45%, #0d181f 100%);
   font-family: 'Inter', system-ui, 'Segoe UI', sans-serif;
   color: #f0f0f0;
+}
+
+/* ── 배경 레이저 캔버스 (3D 캔버스 뒤) ── */
+.main1__lasers {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  animation: main1-fade-in 1.1s ease both; /* 로드 시 서서히 등장 */
+}
+
+@keyframes main1-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .main1__canvas {
@@ -17,6 +39,7 @@
   display: block;
   width: 100%;
   height: 100%;
+  z-index: 2;
 }
 
 /* ── 상단 크롬: 좌상단 로고 배지 · 우상단 햄버거 ── */
@@ -27,7 +50,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 26px 40px;
-  z-index: 3;
+  z-index: 4;
 }
 
 .main1__logo {
@@ -64,7 +87,7 @@
   display: block;
   height: 2px;
   width: 100%;
-  background: #20242e;
+  background: #e6ecf4;
   border-radius: 2px;
   transition: transform 0.25s ease;
 }
@@ -86,26 +109,94 @@
   text-align: center;
   pointer-events: none;
   user-select: none;
-  z-index: 2;
+  z-index: 3;
   padding: 0 20px;
+  /* 구체 생성 직후 텍스트가 살짝 떠오르며 등장 */
+  animation: main1-rise 1s ease 0.55s both;
+}
+
+@keyframes main1-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .main1__title {
   margin: 0;
   font-weight: 700;
-  font-size: clamp(54px, 12.7vw, 190px);
+  /* 'nano-portfolio'(긴 한 단어) — 한 줄에 들어오도록 폭 보정 */
+  font-size: clamp(38px, 10vw, 132px);
   line-height: 1;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   color: #f0f0f0;
+  white-space: nowrap;
+  /* 마우스 패럴럭스(살짝 따라 움직임) */
+  transform: translate(calc(var(--px, 0) * 16px), calc(var(--py, 0) * 9px));
+  transition: transform 0.35s ease-out;
+  will-change: transform;
 }
 
+/* 서브타이틀: 카테고리(밝은 흰색) + 기술 아이템(옅은 흰색), 한 줄씩 전환 */
 .main1__tagline {
-  margin: 0.28em 0 0;
+  margin: 0.7em 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35em 0.7em;
   font-weight: 400;
-  font-size: clamp(22px, 4.7vw, 70px);
-  line-height: 1;
+  font-size: clamp(15px, 2.4vw, 30px);
+  line-height: 1.25;
   color: #f0f0f0;
-  animation: main1-fade 1.1s ease both;
+  /* 패럴럭스(타이틀보다 더 크게 움직여 깊이감) */
+  transform: translate(calc(var(--px, 0) * 26px), calc(var(--py, 0) * 14px));
+  transition: transform 0.35s ease-out;
+  will-change: transform;
+}
+.main1__sub-label {
+  font-weight: 600;
+  color: #f6f7fb;
+  animation: main1-token-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.main1__sub-items {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.15em 0.5em;
+  font-size: 0.8em;
+}
+.main1__sub-item {
+  font-weight: 400;
+  color: rgba(226, 232, 242, 0.62); /* 옅은 흰색(밝기로 카테고리와 구분) */
+  animation: main1-token-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.main1__sub-item:not(:last-child)::after {
+  content: '·';
+  margin-left: 0.5em;
+  color: rgba(200, 210, 225, 0.4);
+}
+
+/* 고급 키네틱 타이포: 토큰이 블러 해제 + 아래에서 떠오르며 등장(스태거) */
+@keyframes main1-token-in {
+  0% {
+    opacity: 0;
+    transform: translateY(0.65em);
+    filter: blur(7px);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 @keyframes main1-fade {
@@ -119,36 +210,158 @@
   }
 }
 
-/* ── 우하단 푸터 크레딧 + 가로 룰 ── */
-.main1__footer {
+/* ── 하단 가운데: 드래그 안내(mattwilldev 원본: 마우스 캡슐 + 시안 아래화살표 하강·페이드) ── */
+.main1__scroll {
   position: absolute;
-  right: 40px;
-  bottom: 22px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 13px;
-  color: #e8eaf2;
+  left: 50%;
+  bottom: clamp(18px, 4vw, 32px);
+  transform: translateX(-50%);
   z-index: 3;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1.8vw, 12px);
 }
-.main1__rule {
-  width: clamp(60px, 14vw, 190px);
-  height: 1px;
-  background: rgba(240, 240, 240, 0.55);
+
+/* 마우스 안내: 가로폭(vw)에 따라 유동적으로 작아짐(데스크톱 44px → 모바일 ~26px) */
+.main1__scroll-svg {
+  width: clamp(26px, 7vw, 44px);
+  height: auto;
+  aspect-ratio: 44 / 66;
+  overflow: visible;
 }
-.main1__footer a {
-  color: #f6f7fb;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+
+/* 마우스(흰선): 시계방향으로 빠르게 그려짐 → 유지 → 시계방향으로 빠르게 지워짐 → 0.7s 정지
+   (루프 4s, draw 0~0.44s / erase 2.88~3.28s / 정지 3.28~4s ≈ 0.72s) */
+.main1__m-mouse {
+  fill: none;
+  stroke-dasharray: 100;
+  /* 1.2s 지연 후 그리기 시작(both = 지연 중 0% 상태 유지 → 보이지 않다가 생성) */
+  animation: main1-m-mouse 4s ease-in-out 1.2s infinite both;
+}
+@keyframes main1-m-mouse {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  11% {
+    stroke-dashoffset: 0;
+  }
+  72% {
+    stroke-dashoffset: 0;
+  }
+  82% {
+    stroke-dashoffset: -100;
+  }
+  100% {
+    stroke-dashoffset: -100;
+  }
+}
+
+/* 네온 라인: 위→아래로 그려졌다 → 유지 → 위→아래로 지워짐 */
+.main1__m-line {
+  fill: none;
+  stroke-dasharray: 100;
+  filter: drop-shadow(0 0 2px #6fe0ff) drop-shadow(0 0 5px rgba(0, 174, 255, 0.7));
+  animation: main1-m-line 4s ease-in-out 1.2s infinite both;
+}
+@keyframes main1-m-line {
+  0%,
+  13% {
+    stroke-dashoffset: 100;
+  }
+  24% {
+    stroke-dashoffset: 0;
+  }
+  62% {
+    stroke-dashoffset: 0;
+  }
+  71%,
+  100% {
+    stroke-dashoffset: -100;
+  }
+}
+
+/* 화살표: 라인 다음 등장 → 유지 → 아래로 더 내려가며 소멸(위에서 아래로) */
+.main1__m-arrow {
+  fill: none;
+  filter: drop-shadow(0 0 2px #6fe0ff) drop-shadow(0 0 5px rgba(0, 174, 255, 0.7));
+  animation: main1-m-arrow 4s ease-in-out 1.2s infinite both;
+}
+@keyframes main1-m-arrow {
+  0%,
+  23% {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  29% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  64%,
+  100% {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+}
+
+.main1__scroll-label {
+  font-size: clamp(8px, 2.3vw, 11px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(220, 228, 240, 0.42);
+  animation: main1-fade-in 0.6s ease 1.5s both; /* 마우스 그려진 뒤 등장 */
+}
+
+/* 입력 환경별 안내 문구: 기본(PC·마우스)=click·scroll, 터치 기기=touch & drag */
+.main1__lbl--touch {
+  display: none;
+}
+@media (hover: none), (pointer: coarse) {
+  .main1__lbl--pc {
+    display: none;
+  }
+  .main1__lbl--touch {
+    display: inline;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main1__m-mouse,
+  .main1__m-line,
+  .main1__m-arrow {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  /* 인트로 등장·패럴럭스·키네틱 타이포 모두 정적으로 */
+  .main1__lasers,
+  .main1__hero,
+  .main1__scroll-label,
+  .main1__title,
+  .main1__tagline,
+  .main1__sub-label,
+  .main1__sub-item {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
 }
 
 @media (max-width: 640px) {
   .main1__chrome {
     padding: 18px 22px;
   }
-  .main1__footer {
-    right: 22px;
-    bottom: 16px;
-    font-size: 12px;
+  /* 모바일: 서브타이틀을 살짝 왼쪽으로(자연스럽게) + 마우스 패럴럭스 비활성 */
+  .main1__title {
+    transform: none;
+  }
+  .main1__tagline {
+    transform: translateX(-0.7em);
   }
 }

@@ -12,7 +12,9 @@ React · Vite · `dev` 서버 · HMR · `src/` · `components/` · `pages`/`rout
 TypeScript 여부 · 에셋 `import`/상대경로 · `public/` · Vibe 코딩 · `preview`(프로덕션 미리보기) ·
 Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects/Contact)·슬라이더·`RootLayout`/`Outlet`** ·
 **`npm run dev/build/preview` · 포트(5173/4173) · `--port`/`--host`/`--strictPort` · 로컬 접속 URL·`base` 경로 함정** ·
-**`three.js`·WebGL·캔버스·물리(파티클·충돌·반발)·`main-1` 히어로·마우스 인터랙션(`useEffect` 애니메이션 루프)·`requestAnimationFrame`**
+**`three.js`·WebGL·캔버스·물리(파티클·충돌·반발)·`main-1` 히어로·마우스 인터랙션(`useEffect` 애니메이션 루프)·`requestAnimationFrame`** ·
+**배경 레이저(2D 캔버스·대각선·63.1°·드리프트·모바일 우하단 커버)·드래그 안내 인디케이터(마우스 캡슐+네온 화살표·`stroke-dashoffset`·SVG 키프레임)·mattwilldev.com 레퍼런스·Playwright 픽셀 측정** ·
+**`nano-portfolio` 타이틀·서브타이틀 순환·키네틱 타이포(`token-in` blur+slide)·마우스 패럴럭스·구체 인트로 생성(scale·리플·`er` 충돌·펼침)·모바일 반응형(`clamp`·`vw`·`pointer:coarse`·입력환경별 라벨 CLICK·SCROLL/TOUCH & DRAG)·푸터 제거**
 
 ## 2. 세부 도메인 목차
 
@@ -24,7 +26,12 @@ Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects
 | A-4 | Vibe 코딩 루프 | HMR 반복·AI 보조 즉시 검증·작은 단위 | [dev-stack §4](../dev-stack.md) |
 | A-5 | **포트폴리오 앱 구조** | 멀티 라우트(해시)·페이지(Home/About/Projects/Contact)·슬라이더 | [portfolio-plan](../portfolio-plan.md) 🟡 |
 | A-6 | **로컬 빌드·실행·포트** | `npm run dev/build/preview`·dev 5173·preview 4173·`base` 접속 URL·포트 변경/충돌 | [local-run](../local-run.md) ✔ |
-| A-7 | **main-1 3D 물리 히어로** | `three.js` 씬·물리 루프(자석·부유·흐름·충돌·표면장력)·마우스/드래그/클릭 반응·속도 임계값 반발·튜닝 상수 | [main1-hero](../main1-hero.md) ✅ |
+| A-7 | **main-1 3D 물리 히어로** | `three.js` 씬·렌더·물리 루프(자석·부유·흐름·충돌·표면장력)·마우스/드래그/클릭 반응·속도 임계값 반발 | [main1-hero §4–§6](../main1-hero.md) ✅ |
+| A-8 | **main-1 인트로 생성** | 구체 제자리 우아한 등장(scale easeOutCubic·가운데→바깥 리플)·충돌 `er`(스케일 반지름)로 버벅임 제거·수축→약한 펼침 | [main1-hero §7](../main1-hero.md) ✅ |
+| A-9 | **main-1 타이틀/서브타이틀** | `nano-portfolio`·서브 4줄 2.8s 순환·키네틱 타이포(`token-in` blur+slide 스태거)·마우스 패럴럭스·흰색 통일 | [main1-hero §8](../main1-hero.md) ✅ |
+| A-10 | **main-1 배경 레이저** | 2D 캔버스·고정 63.1°·`min(W·0.07,150)`·상단 가장자리 앵커+좌하 연장·드리프트·헤드 점·커서 밝힘·**모바일 우하단 커버(`driftRange=W·1.08+H·0.55`)** | [main1-hero §9](../main1-hero.md) ✅ |
+| A-11 | **main-1 드래그 안내** | SVG `stroke-dashoffset` draw/erase·마우스+네온 라인+화살표·루프 4s·**입력환경별 라벨(CLICK·SCROLL/TOUCH & DRAG)**·**반응형 크기(`clamp`)** | [main1-hero §10](../main1-hero.md) ✅ |
+| A-12 | **main-1 모바일 반응형** | 레이저 우하단 커버·서브타이틀 좌측 이동·패럴럭스(터치 비활성)·드래그 안내 `clamp` 축소·입력환경별 문구·푸터 제거 | [main1-hero §11](../main1-hero.md) ✅ |
 
 ## 3. 실제 확인사항 (작업 전 체크리스트)
 
@@ -36,7 +43,8 @@ Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects
 - [ ] 빌드 시점 차이를 보려면 `build` → `preview` 로 프로덕션 모드 점검 → 허브 **B**.
 - [ ] **로컬 접속 시 `base` 경로 붙이기**(`http://localhost:5173/nano-portfolio/`) — 루트는 빈 화면/404. 빌드·포트 상세 → [`local-run.md`](../local-run.md).
 - [ ] 포트는 **점유 시 자동 증가**할 수 있으니 기동 로그의 `Local:` URL 확인(5173 가정 금지).
-- [ ] **3D/물리(`main-1`)**: `three` 의존성은 [`mcp-setup.md` D-2](../mcp-setup.md) 버전표 우선 갱신. 언마운트 시 rAF·리스너·geometry/material/renderer **dispose** 필수. 물리 튜닝은 [`main1-hero.md`](../main1-hero.md) 상수표와 동기화. 상세 → [`main1-hero.md`](../main1-hero.md).
+- [ ] **3D/물리/인트로(`main-1`)**: `three` 의존성은 [`mcp-setup.md` D-2](../mcp-setup.md) 버전표 우선 갱신. 언마운트 시 **rAF(구체·레이저·패럴럭스)**·리스너·geometry/material/renderer **dispose** 필수. 물리/인트로 튜닝은 [`main1-hero.md §5–§7·§14`](../main1-hero.md) 상수표와 동기화(인트로 충돌은 `er` 사용 — 버벅임 방지).
+- [ ] **레이저/타이포/드래그(`main-1`)**: 레퍼런스 **mattwilldev.com**. 레이저는 [`§9·§14`](../main1-hero.md)(우측 한계 `driftRange=W·1.08+H·0.55` 모바일 커버 주의), 타이틀/서브는 [`§8·§14`](../main1-hero.md), 드래그 안내는 [`§10·§14`](../main1-hero.md), 반응형은 [`§11`](../main1-hero.md) **먼저 갱신** 후 코드. 검증 시 **stale dev 서버 주의**(HMR 미반영 → 클린 포트 재기동).
 
 ## 4. 정본 / 소스
 

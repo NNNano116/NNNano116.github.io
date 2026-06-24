@@ -7,22 +7,193 @@ import './Main1.css'
 // 효과: 중심 응집(자석) + 구체끼리 충돌 + 커서 반발 + 클릭 버스트 + 부유/흐름(완만한 회전).
 // 세 힘(자석·부유·흐름)의 가중치를 느린 사인으로 교차시켜 번갈아 강조한다.
 
-// 로드 시 무작위로 뽑는 태그라인.
-const TAGLINES = [
-  'k-pop fan.',
-  'boba maniac.',
-  'code wizard.',
-  'coffee addict.',
-  'night owl.',
-  'pixel dreamer.',
+const NAME = 'nano-portfolio' // 가운데 타이틀
+const LOGO = 'n' // 좌상단 원형 배지 글자
+
+// 서브타이틀: 한 줄(카테고리 + 기술 아이템)씩 순환 전환
+const SUBTITLES: { label: string; items: string[] }[] = [
+  { label: 'AI Services', items: ['Claude', 'Claude Design', 'Stitch', 'Gemini'] },
+  { label: 'Vibe Coding', items: ['Claude Code', 'Codex'] },
+  { label: 'Backend Fullstack', items: ['PHP', 'NestJS', 'MySQL'] },
+  { label: 'Web/App Development', items: ['React Native', 'Flutter'] },
 ]
 
-const NAME = 'SHIYUN LU' // 가운데 타이틀 — 추후 교체 가능
-const LOGO = 'S' // 좌상단 원형 배지 글자
+// ── 배경 레이저(mattwilldev.com 참조: Pts.js 기법 재현) ──
+// 고정 기준선(우상향 대각)에 직교 투영한 수선들 = 모두 평행한 가파른 대각선(우상단→좌측하단).
+// 점(레이저 헤드)이 중심 둘레를 아주 천천히 공전 → 선 길이·위치가 흔들린다. 커서 근처는 밝아짐.
+const LASER_DOTS = ['#FF3F8E', '#04C2C9', '#2E55C1'] // 헤드 색(핑크·시안·블루)
+// 사이트 실측: 레이저는 뷰포트 크기와 무관하게 고정 ~63.1°(수평 기준). refLine 은 그에 직교.
+const LASER_DEG = 63.1
+
+// 점 p 에서 선분 ab 까지의 최단거리(커서 근접 판정용).
+function distToSeg(px: number, py: number, ax: number, ay: number, bx: number, by: number) {
+  const dx = bx - ax
+  const dy = by - ay
+  const l2 = dx * dx + dy * dy || 1
+  let t = ((px - ax) * dx + (py - ay) * dy) / l2
+  t = Math.max(0, Math.min(1, t))
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy))
+}
 
 export default function Main1() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [tagline] = useState(() => TAGLINES[Math.floor(Math.random() * TAGLINES.length)])
+  const laserRef = useRef<HTMLCanvasElement>(null)
+  const heroRef = useRef<HTMLDivElement>(null)
+  const [subIdx, setSubIdx] = useState(0)
+
+  // 서브타이틀 한 줄씩 순환(약 2.8s 간격). reduced-motion 이면 첫 줄 고정.
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const id = window.setInterval(
+      () => setSubIdx((i) => (i + 1) % SUBTITLES.length),
+      2800,
+    )
+    return () => window.clearInterval(id)
+  }, [])
+
+  // 히어로 텍스트 마우스 패럴럭스(인터랙션) — 커서 위치를 CSS 변수로 전달
+  useEffect(() => {
+    const el = heroRef.current
+    if (!el) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    // 터치 환경(태블릿·모바일)에선 패럴럭스 비활성(터치 후 텍스트가 어긋나 보이는 문제 방지)
+    if (window.matchMedia('(pointer: coarse)').matches) return
+    let raf = 0
+    function onMove(e: PointerEvent) {
+      const nx = e.clientX / window.innerWidth - 0.5
+      const ny = e.clientY / window.innerHeight - 0.5
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        el!.style.setProperty('--px', nx.toFixed(3))
+        el!.style.setProperty('--py', ny.toFixed(3))
+      })
+    }
+    window.addEventListener('pointermove', onMove)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      cancelAnimationFrame(raf)
+    }
+  }, [])
+
+  // ── 배경 레이저 캔버스(2D) — 3D 구체 캔버스 뒤에 깔린다 ──
+  useEffect(() => {
+    const cnv = laserRef.current
+    if (!cnv) return
+    const ctx = cnv.getContext('2d')
+    if (!ctx) return
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    let W = 0
+    let H = 0
+    // 레이저 방향: 고정 63.1° 우상→좌하(아래로 갈수록 x 감소)
+    const dirAng = (LASER_DEG * Math.PI) / 180
+    const ddx = -Math.cos(dirAng)
+    const ddy = Math.sin(dirAng)
+    let wrapLeft = 0
+    let driftRange = 0
+
+    type Laser = { topX: number; len: number; color: string; bright: number }
+    let lasers: Laser[] = []
+
+    function build() {
+      W = window.innerWidth
+      H = window.innerHeight
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      cnv!.width = Math.round(W * dpr)
+      cnv!.height = Math.round(H * dpr)
+      cnv!.style.width = W + 'px'
+      cnv!.style.height = H + 'px'
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+      // 개수: min(width*0.07, 150) — 원본과 동일
+      const N = Math.max(40, Math.min(Math.round(W * 0.07), 150))
+      // 상단 시작 x 는 우측으로 치우침(우상단이 가장 빽뺵).
+      // topX∈[~0,W] → 위쪽 가장자리에서 시작 / topX>W → 우측 가장자리로 진입.
+      // 우측 한계는 화면 높이(H)도 반영: 레이저는 좌하향이라 길이(∝H)만큼 좌로 쓸리므로,
+      // 세로로 긴 모바일에서도 우측 하단까지 닿으려면 topX_max ≳ W + cos(63.1°)/sin(63.1°)·H.
+      wrapLeft = -W * 0.08
+      driftRange = W * 1.08 + H * 0.55
+      lasers = []
+      for (let i = 0; i < N; i++) {
+        lasers.push({
+          topX: wrapLeft + Math.pow(Math.random(), 0.6) * driftRange,
+          len: (0.55 + Math.random() * 1.05) * H, // 길이 제각각
+          color: LASER_DOTS[i % 3],
+          bright: 0.1,
+        })
+      }
+    }
+    build()
+
+    const mouse = { x: -9999, y: -9999 }
+    function onMove(e: PointerEvent) {
+      mouse.x = e.clientX
+      mouse.y = e.clientY
+    }
+    function onLeave() {
+      mouse.x = -9999
+      mouse.y = -9999
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerleave', onLeave)
+
+    let resizeTimer = 0
+    function onResize() {
+      clearTimeout(resizeTimer)
+      resizeTimer = window.setTimeout(build, 150)
+    }
+    window.addEventListener('resize', onResize)
+
+    const driftSpeed = reduce ? 0 : 13 // px/s, 좌측으로 아주 느린 드리프트
+    let raf = 0
+    let prev = performance.now()
+
+    function frame(now: number) {
+      let dt = (now - prev) / 1000
+      prev = now
+      if (dt > 0.05) dt = 0.05
+      ctx!.clearRect(0, 0, W, H)
+      ctx!.lineWidth = 1
+      for (const L of lasers) {
+        // 좌측으로 드리프트 → 좌측 끝 넘으면 우측 너머로 wrap(새 길이로 재진입)
+        L.topX -= driftSpeed * dt
+        if (L.topX < wrapLeft) {
+          L.topX += driftRange
+          L.len = (0.55 + Math.random() * 1.05) * H
+        }
+        const x1 = L.topX
+        const y1 = 0 // 상단 끝은 항상 위쪽 가장자리(우상단)에서 시작
+        const x2 = L.topX + ddx * L.len
+        const y2 = ddy * L.len
+        // 커서 근접 시 밝아짐: 거리<40px → 0.1→0.25
+        const d = distToSeg(mouse.x, mouse.y, x1, y1, x2, y2)
+        L.bright = d < 40 ? Math.min(0.25, L.bright + 0.015) : Math.max(0.1, L.bright - 0.01)
+        ctx!.strokeStyle = `rgba(255,255,255,${L.bright})`
+        ctx!.beginPath()
+        ctx!.moveTo(x1, y1)
+        ctx!.lineTo(x2, y2)
+        ctx!.stroke()
+        // 헤드 점(하단 끝)
+        if (x2 > 0 && x2 < W && y2 > 0 && y2 < H) {
+          ctx!.fillStyle = L.color
+          ctx!.beginPath()
+          ctx!.arc(x2, y2, 1.2, 0, Math.PI * 2)
+          ctx!.fill()
+        }
+      }
+      raf = requestAnimationFrame(frame)
+    }
+    raf = requestAnimationFrame(frame)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      clearTimeout(resizeTimer)
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerleave', onLeave)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -63,10 +234,14 @@ export default function Main1() {
 
     type Body = {
       mesh: THREE.Mesh
+      mat: THREE.MeshStandardMaterial
       pos: THREE.Vector3
       vel: THREE.Vector3
       r: number
+      er: number // 현재 유효 반지름(인트로 중 스케일 반영) — 충돌 판정에 사용
       ph: THREE.Vector3
+      born: number // 인트로 등장 시각(가운데→바깥 리플)
+      shown: boolean // 인트로(스케일) 완료
     }
     const bodies: Body[] = []
     for (let i = 0; i < COUNT; i++) {
@@ -77,24 +252,33 @@ export default function Main1() {
         metalness: 0.0,
       })
       const mesh = new THREE.Mesh(geo, mat)
-      mesh.scale.setScalar(r)
+      mesh.scale.setScalar(reduce ? r : 0.0001)
+      // 제자리(클러스터 내 위치)에서 생성
       const pos = new THREE.Vector3(
         (Math.random() - 0.5) * 6,
         (Math.random() - 0.5) * 6,
         (Math.random() - 0.5) * 3.5,
       )
+      // 인트로 시작은 중앙으로 ~10% 수축 → 자라며 약하게 바깥으로 펼쳐짐
+      if (!reduce) pos.multiplyScalar(0.9)
       mesh.position.copy(pos)
       scene.add(mesh)
       bodies.push({
         mesh,
+        mat,
         pos,
-        vel: new THREE.Vector3(),
+        // 등장 시 약한 바깥 방향 속도(거리에 비례) → 살짝 펼쳐지며 안착
+        vel: reduce ? new THREE.Vector3() : pos.clone().multiplyScalar(0.8),
         r,
+        er: reduce ? r : 0,
         ph: new THREE.Vector3(
           Math.random() * Math.PI * 2,
           Math.random() * Math.PI * 2,
           Math.random() * Math.PI * 2,
         ),
+        // 가운데→바깥 리플(중심에 가까운 구체부터 피어남)
+        born: reduce ? 0 : Math.min(pos.length() / 5, 1) * 0.5,
+        shown: reduce,
       })
     }
 
@@ -209,7 +393,25 @@ export default function Main1() {
       const sweepMag =
         Math.min(pSpeed, 2600) * 0.011 * (pointer.down ? 1 : 0.45)
 
+      // 인트로: 제자리에서 우아하게 생성(0→full, 가운데→바깥 리플).
+      // 충돌은 '현재 스케일 반지름(er)'으로 판정 → 작을 땐 안 부딪혀 버벅임/튐 없음.
+      const introDur = 0.7
       for (const b of bodies) {
+        if (b.shown) continue
+        const age = t - b.born
+        const p = Math.max(0, Math.min(1, age / introDur))
+        const s = 1 - (1 - p) ** 3 // easeOutCubic
+        b.er = b.r * s
+        b.mesh.scale.setScalar(Math.max(0.0001, b.er))
+        if (p >= 1) {
+          b.er = b.r
+          b.mesh.scale.setScalar(b.r)
+          b.shown = true
+        }
+      }
+
+      for (const b of bodies) {
+        if (t < b.born) continue // 아직 등장 전엔 물리 정지(제자리 대기)
         acc.set(0, 0, 0)
         // 자석: 중심 스프링(응집)
         acc.addScaledVector(b.pos, -2.85 * wMagnet)
@@ -252,11 +454,14 @@ export default function Main1() {
       // 구체끼리 충돌(분리 + 탄성) + 근접 이웃 표면장력
       for (let i = 0; i < bodies.length; i++) {
         const a = bodies[i]
+        if (t < a.born) continue // 아직 등장 전 제외
         for (let j = i + 1; j < bodies.length; j++) {
           const c = bodies[j]
+          if (t < c.born) continue
           delta.subVectors(c.pos, a.pos)
           const dist = delta.length() || 0.001
-          const min = a.r + c.r + gap
+          // 현재 스케일 반지름(er)으로 판정 → 작을 때는 안 부딪혀 부드럽게 자라며 자리 잡음
+          const min = a.er + c.er + gap
           if (dist < min) {
             delta.divideScalar(dist)
             const overlap = (min - dist) * 0.5
@@ -288,6 +493,10 @@ export default function Main1() {
 
       // 적분 + 부드러운 경계
       for (const b of bodies) {
+        if (t < b.born) {
+          b.mesh.position.copy(b.pos) // 아직 등장 전: 제자리(크기 0)
+          continue
+        }
         b.pos.addScaledVector(b.vel, dt)
         const maxR = 7.6
         const len = b.pos.length()
@@ -321,6 +530,9 @@ export default function Main1() {
 
   return (
     <div className="main1">
+      {/* 배경 레이저(2D 캔버스) — 3D 구체 캔버스보다 뒤 */}
+      <canvas ref={laserRef} className="main1__lasers" aria-hidden="true" />
+
       <canvas ref={canvasRef} className="main1__canvas" />
 
       <header className="main1__chrome">
@@ -333,17 +545,64 @@ export default function Main1() {
         </button>
       </header>
 
-      <div className="main1__hero">
+      <div className="main1__hero" ref={heroRef}>
         <h1 className="main1__title">{NAME}</h1>
-        <h2 className="main1__tagline">{tagline}</h2>
+        {/* 서브타이틀: key 로 줄 전환마다 토큰별 스태거(블러+상승) 재생 */}
+        <h2 className="main1__tagline" key={subIdx}>
+          <span className="main1__sub-label" style={{ animationDelay: '0s' }}>
+            {SUBTITLES[subIdx].label}
+          </span>
+          <span className="main1__sub-items">
+            {SUBTITLES[subIdx].items.map((it, i) => (
+              <span
+                className="main1__sub-item"
+                key={it}
+                style={{ animationDelay: `${0.07 * (i + 1) + 0.05}s` }}
+              >
+                {it}
+              </span>
+            ))}
+          </span>
+        </h2>
       </div>
 
-      <footer className="main1__footer">
-        <span className="main1__rule" />
-        <span>
-          Made with <a href="https://react.dev/" target="_blank" rel="noreferrer">react</a>, <a href="https://vite.dev/" target="_blank" rel="noreferrer">vite</a>, and <a href="https://threejs.org/" target="_blank" rel="noreferrer">three.js</a>.
+      {/* 하단 가운데 — 드래그 안내: 마우스(흰선·시계방향) → 네온선(위→아래) → 화살표,
+          이후 화살표↓ 소멸 → 네온선 위→아래 소멸 → 마우스 시계방향 소멸 (반복) */}
+      <div className="main1__scroll">
+        <svg className="main1__scroll-svg" viewBox="0 0 44 66" fill="none" aria-hidden="true">
+          {/* 마우스 외곽선 — 흰선, 위 중앙에서 시계방향으로 그려졌다 시계방향으로 지워짐 */}
+          <path
+            className="main1__m-mouse"
+            d="M22 1.5 A20.5 20.5 0 0 1 42.5 22 L42.5 44 A20.5 20.5 0 0 1 1.5 44 L1.5 22 A20.5 20.5 0 0 1 22 1.5 Z"
+            pathLength={100}
+            stroke="rgba(236,240,248,0.85)"
+            strokeWidth="1.5"
+          />
+          {/* 네온 라인 — 위→아래로 그려졌다 위→아래로 지워짐(끝을 아래로 연장해 상하 여백 대칭) */}
+          <path
+            className="main1__m-line"
+            d="M22 16 L22 44"
+            pathLength={100}
+            stroke="#00aeff"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          {/* 화살표 머리 — 팁을 y50 까지(상단 여백 14.5 = 하단 여백 14.5) */}
+          <path
+            className="main1__m-arrow"
+            d="M16.5 43 L22 50 L27.5 43"
+            stroke="#00aeff"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        {/* 입력 환경별 안내: PC(마우스)=click·scroll / 태블릿·모바일(터치)=touch & drag */}
+        <span className="main1__scroll-label">
+          <span className="main1__lbl main1__lbl--pc">click&nbsp;·&nbsp;scroll</span>
+          <span className="main1__lbl main1__lbl--touch">touch&nbsp;&amp;&nbsp;drag</span>
         </span>
-      </footer>
+      </div>
     </div>
   )
 }
