@@ -281,9 +281,15 @@ export default function Main1() {
       target = el!.scrollTop >= trig ? 1 : 0
       // 클릭 게이트: 색 전환(3/5)을 지나면 새 클릭 버스트 정지(복귀 시 자동 해제)
       gateRef.current = el!.scrollTop >= trig
-      // 명칭(자기소개) 표시: 1~2페이지에선 보이고, 3페이지(포트폴리오)로 가면서 사라짐
+      // 2→3 전환: 이력→포트폴리오 거리에 따라 '연속' 크로스페이드(--work). 스크롤/드래그를 그대로
+      // 따라가 부드럽게 미리보기(이동) → 놓으면 스냅이 0/1 로 확정(페이지 전환). 갑작스런 flip 없음.
       const work = el!.querySelector('.seg--work') as HTMLElement | null
       const wTop = work ? work.offsetTop : rTop * 2
+      const workProg = clamp((el!.scrollTop - rTop) / Math.max(1, wTop - rTop))
+      el!.style.setProperty('--work', workProg.toFixed(4))
+      el!.classList.toggle('is-work', workProg > 0.5)
+      el!.classList.toggle('is-work-settled', workProg > 0.82)
+      // 명칭(자기소개) 표시: 1~2페이지에선 보이고, 3페이지(포트폴리오)로 가면서 사라짐
       el!.style.setProperty(
         '--name-vis',
         clamp(1 - (el!.scrollTop - rTop) / Math.max(1, (wTop - rTop) * 0.55)).toFixed(3),
@@ -351,14 +357,17 @@ export default function Main1() {
       }
       const gap = hi - lo
       if (gap < 1) return
+      // 2↔3(이력↔포트폴리오)은 콘텐츠가 고정 핀(스크롤해도 제자리)이라, '조금만' 움직여도 페이지 전환.
+      // 1↔2 는 큰 색반전 전환이라 조금 더 여유. (lo===pts[1]=rTop 이면 2↔3 구간)
+      const th = lo === pts[1] ? 0.1 : 0.18
       if (dir > 0) {
         // 아래로: lo(떠난 페이지)에서 얼마나 갔나
         const moved = (y - lo) / gap
-        animateTo(moved >= SNAP.THRESHOLD ? hi : lo, moved >= SNAP.THRESHOLD ? SNAP.DUR_FWD : SNAP.DUR_BACK)
+        animateTo(moved >= th ? hi : lo, moved >= th ? SNAP.DUR_FWD : SNAP.DUR_BACK)
       } else {
         // 위로: hi(떠난 페이지)에서 얼마나 올라왔나
         const moved = (hi - y) / gap
-        animateTo(moved >= SNAP.THRESHOLD ? lo : hi, moved >= SNAP.THRESHOLD ? SNAP.DUR_FWD : SNAP.DUR_BACK)
+        animateTo(moved >= th ? lo : hi, moved >= th ? SNAP.DUR_FWD : SNAP.DUR_BACK)
       }
     }
 
@@ -912,6 +921,33 @@ export default function Main1() {
     requestAnimationFrame(step)
   }
 
+  // 우측 하단 '맨 위로' 버튼 → 최상단(히어로)로 부드럽게 복귀(easeInOutCubic). 2P 부터 노출.
+  function scrollToTop() {
+    const el = scrollRef.current
+    if (!el) return
+    const start = el.scrollTop
+    if (start < 4) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.scrollTop = 0
+      return
+    }
+    const dur = 900
+    let t0 = 0
+    const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
+    animatingRef.current = true // 스냅 컨트롤러가 끼어들지 않도록
+    const step = (now: number) => {
+      if (!t0) t0 = now
+      const p = Math.min(1, (now - t0) / dur)
+      el.scrollTop = Math.round(start * (1 - ease(p)))
+      if (p < 1) requestAnimationFrame(step)
+      else {
+        el.scrollTop = 0
+        animatingRef.current = false
+      }
+    }
+    requestAnimationFrame(step)
+  }
+
   // 다국어 명칭 렌더(히어로·이력 섹션 타이틀 공용). 문장=줄, 단어별 스태거(--w), 이름은 크게.
   // firstLineOnly: 섹션 타이틀용 — 첫 문장(이름)만 → 길이가 길어 한 줄에서 넘치지 않게.
   const renderTitle = (idx: number, firstLineOnly = false) => {
@@ -969,6 +1005,25 @@ export default function Main1() {
           <span />
         </button>
       </header>
+
+      {/* 2P/3P 고정 스테이지 타이틀 — 좌상단 고정. is-settled(2P 도착) 시 등장.
+          --work 로 「// profile 명칭」 ↔ 「// works 개발&포트폴리오」 제자리 크로스페이드(원페이지 전환 느낌). */}
+      <div className="main1__stage">
+        <div className="main1__stage-inner">
+          <div className="main1__stage-layer main1__stage-layer--profile">
+            <p className="seg__eyebrow">// profile</p>
+            <h2
+              className={`seg__title seg__title--name ${titleIn ? 'main1__title--in' : 'main1__title--reset'}`}
+            >
+              {renderTitle(titleIdx, true)}
+            </h2>
+          </div>
+          <div className="main1__stage-layer main1__stage-layer--works" aria-hidden="true">
+            <p className="seg__eyebrow">// works</p>
+            <h2 className="seg__title">개발 &amp; 포트폴리오</h2>
+          </div>
+        </div>
+      </div>
 
       {/* 자기소개 명칭 — .main1 직속(섹션 밖). z-index 6 으로 글라스 패널 '위'에 그려져 블러되지 않음.
           --inv 로 중앙(1p)↔좌상단(2p) 이동·축소·색 전환. 색 전환(3/5) 전엔 중앙 고정(fix). */}
@@ -1051,15 +1106,8 @@ export default function Main1() {
       <section className="seg seg--resume" id="resume">
         {/* 자기소개 섹션 타이틀 = 명칭(in-flow, 섹션과 함께 스크롤). 히어로의 fixed 명칭이
             좌상단으로 올라오며 여기로 핸드오프(페이드 크로스). // works 처럼 섹션 헤딩 역할. */}
+        {/* 제목(// profile 명칭)은 고정 스테이지 타이틀(.main1__stage)로 이동 — 2→3 제자리 모프용. */}
         <div className="seg__inner seg__inner--resume">
-          <p className="seg__eyebrow">// profile</p>
-          {/* 섹션 타이틀 = 명칭(다국어 순환, 첫 문장). 스크롤 도착 + 매 언어 전환마다 단어별 rise
-              (페이지1과 동일한 titleIn 방식). 페이지2에선 3D 렌더가 스킵되어 전환이 매끄럽게 재생됨. */}
-          <h2
-            className={`seg__title seg__title--name ${titleIn ? 'main1__title--in' : 'main1__title--reset'}`}
-          >
-            {renderTitle(titleIdx, true)}
-          </h2>
           {/* 디자인 이력서 — 자기소개 한 줄 + 2단(좌 프로필 / 우 경력). 도착 시 블록별 순차 등장(--i). */}
           <p className="resume__intro" style={{ ['--i' as string]: 0 }}>
             {RESUME_INTRO}
@@ -1113,9 +1161,8 @@ export default function Main1() {
 
       {/* ───────────── 3. 개발 · 포트폴리오(라이트) ───────────── */}
       <section className="seg seg--work" id="work">
+        {/* 제목(// works 개발&포트폴리오)은 고정 스테이지 타이틀(.main1__stage)로 이동. */}
         <div className="seg__inner">
-          <p className="seg__eyebrow">// works</p>
-          <h2 className="seg__title">개발 &amp; 포트폴리오</h2>
           <div className="work-grid">
             {SKILL_GROUPS.map((g) => (
               <article className="work-card" key={g.title} tabIndex={0}>
@@ -1139,6 +1186,26 @@ export default function Main1() {
           </div>
         </div>
       </section>
+
+      {/* 우측 하단 고정 '맨 위로' 버튼 — 1→2 전환(--inv)에 맞춰 자연스럽게 생성/소멸. */}
+      <button
+        type="button"
+        className="main1__top"
+        onClick={scrollToTop}
+        aria-label="맨 위로"
+        title="맨 위로"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 19 V6 M6 12 L12 6 L18 12"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
     </div>
   )
 }
