@@ -329,6 +329,78 @@ export default function Main1() {
     return () => io.disconnect()
   }, [])
 
+  // ── 데스크탑(wheel) 섹션 캡 — 한 번의 휠 제스처로 '한 섹션'만 이동(1P→2P 가 최대, 오버슈트 차단).
+  //    섹션이 뷰포트보다 크면(긴 이력) 그 안에서는 네이티브 자유 스크롤 허용 → 끝에서 다음 섹션으로 스냅.
+  //    터치(모바일)는 CSS proximity 가 담당(여기선 wheel 만). reduced-motion 이면 비활성. ──
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let animating = false
+    let raf = 0
+    const tops = () =>
+      ['.seg--hero', '.seg--resume', '.seg--work']
+        .map((s) => el.querySelector<HTMLElement>(s))
+        .filter((s): s is HTMLElement => !!s)
+        .map((s) => ({ top: s.offsetTop, bottom: s.offsetTop + s.offsetHeight }))
+    function animateTo(to: number) {
+      cancelAnimationFrame(raf)
+      const from = el!.scrollTop
+      const dist = to - from
+      if (Math.abs(dist) < 2) return
+      animating = true
+      animatingRef.current = true
+      let t0 = 0
+      const dur = Math.min(720, 360 + Math.abs(dist) * 0.34)
+      const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
+      const step = (now: number) => {
+        if (!t0) t0 = now
+        const p = Math.min(1, (now - t0) / dur)
+        el!.scrollTop = Math.round(from + dist * ease(p))
+        if (p < 1) raf = requestAnimationFrame(step)
+        else {
+          el!.scrollTop = to
+          animating = false
+          animatingRef.current = false
+        }
+      }
+      raf = requestAnimationFrame(step)
+    }
+    function onWheel(e: WheelEvent) {
+      if (Math.abs(e.deltaY) < 1) return
+      if (animating || animatingRef.current) {
+        e.preventDefault() // 전환 중(휠 스냅·안내 클릭·맨위로) 추가 휠 차단(오버슈트·끊김 방지)
+        return
+      }
+      const vh = el!.clientHeight
+      const y = el!.scrollTop
+      const secs = tops()
+      const cur = secs.find((s) => y >= s.top - 4 && y < s.bottom - 4) || secs[0]
+      if (e.deltaY > 0) {
+        // 아래로: 현재 섹션 하단이 화면 아래에 더 남아있으면(섹션이 뷰포트보다 큼) 내부 자유 스크롤 허용
+        if (cur.bottom - vh > y + 3) return
+        const next = secs.find((s) => s.top > cur.top + 4)
+        if (next) {
+          e.preventDefault()
+          animateTo(next.top)
+        }
+      } else {
+        // 위로: 현재 섹션 top 위로 스크롤 공간 있으면 내부 자유 스크롤
+        if (y > cur.top + 3) return
+        const prev = [...secs].reverse().find((s) => s.top < cur.top - 4)
+        if (prev) {
+          e.preventDefault()
+          animateTo(prev.top)
+        }
+      }
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => {
+      el.removeEventListener('wheel', onWheel)
+      cancelAnimationFrame(raf)
+    }
+  }, [])
+
   // ── 배경 레이저 캔버스(2D) — 3D 구체 캔버스 뒤에 깔린다 ──
   useEffect(() => {
     const cnv = laserRef.current
