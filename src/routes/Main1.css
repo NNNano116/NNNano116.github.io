@@ -14,8 +14,8 @@
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  /* 1p↔2p 임계 스냅은 JS(animateTo/maybeSnap)로 제어 — CSS scroll-snap 미사용(충돌 방지) */
-  /* scroll-behavior 도 두지 않음 — 클릭 전환·스냅 모두 JS 커스텀 이징으로 직접 제어 */
+  /* 페이지 정렬 = CSS scroll-snap(아래 .main1 규칙: proximity + .seg scroll-snap-stop:always).
+     scroll-behavior 는 두지 않음 — 안내 클릭/맨위로는 JS 커스텀 이징(scrollToNext/scrollToTop). */
   background: #0d181f; /* 폴백(실제 배경은 .main1__backdrop 이 그림) */
   font-family: 'Pretendard Variable', 'Pretendard', 'Inter', system-ui, 'Segoe UI', sans-serif;
   color: #f0f0f0;
@@ -586,10 +586,13 @@
    2단(≥769)=좌/우 2열, 작은 태블릿~모바일(≤768)=세로 1열(.resume 그리드 규칙에서 처리).
    ──────────────────────────────────────────────────────────────── */
 .main1 {
-  scroll-snap-type: y proximity; /* 전 화면 자연 스크롤 + 섹션 경계 부드러운 정렬 */
+  /* 자연 스크롤(proximity) 유지 + 한 번의 스크롤로 페이지를 건너뛰지 못하게(scroll-snap-stop:always).
+     → 1→2 이동은 부드럽되, 2P 에서 '딱' 멈춰(락) 2→3 으로 오버슈트되지 않음. */
+  scroll-snap-type: y proximity;
 }
 .seg {
   scroll-snap-align: start;
+  scroll-snap-stop: always; /* 각 섹션을 건너뛰지 못하고 반드시 멈춤 → 2P 잠깐 락 */
 }
 /* 인플로우 섹션 타이틀(// profile + 명칭 / // works) — 섹션과 함께 스크롤 */
 .seg__head {
