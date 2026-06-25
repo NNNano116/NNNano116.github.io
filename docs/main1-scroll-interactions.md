@@ -68,7 +68,9 @@
 - **단어별 rise (1p)**: 언어 전환 시 `titleIn` 을 `false→(rAF×2)→true` 로 토글. CSS:
   - 기본 `.main1__title-word { opacity:0; translateY(0.6em); transition }`, `--reset` 은 `transition:none`(즉시 숨김→깜빡임 방지), `.main1__title--in` 에서 `opacity:1`(단어별 `--w·0.08s` 스태거).
   - ⚠️ **키프레임-on-remount 는 무거운 3D 위에서 starve** 되어 단어가 opacity 0 에 갇힘 → **transition + 클래스 토글**(JS 제어)로 안정화.
-- **단어별 rise (2p)**: 섹션 타이틀은 **`.is-settled` 도착 시 1회** rise(`.main1.is-settled .seg__title--name .main1__title-word`). 이후 **보인 채로 텍스트만 순환**(리셋 없음 → 사라지지 않음).
+- **단어별 rise (2p)**: 섹션 타이틀(`.seg__title--name`)도 **페이지1과 동일한 `titleIn`(reset→in) 방식**으로 **매 언어 전환마다** 단어별 rise. 단, `.is-settled`(스크롤 도착, inv>0.88)로 게이트:
+  `.main1.is-settled .seg__title--name.main1__title--in .main1__title-word { opacity:1; transform:none }` → 도착 전엔 숨김(1p 명칭과 이중 노출 방지), 도착 후 매 전환 rise.
+  - ✅ 페이지2에선 **3D 렌더가 스킵**(§7)되어 컴포지터 여유 → 전환이 매끄럽게 재생. (이전 "도착 시 1회만" 절충안에서 매-전환 rise 로 복귀)
 - 로고(`.main1__logo-word`)는 **J·Young** → 1→2 전환 시 `· portfolio` 펼침 + 라이트에서 다크로.
 
 ## 5. 임계 스프링 스냅 (페이지 자동 정렬) ⭐
@@ -115,10 +117,11 @@
 
 - `--inv`: 3/5 통과 시 0→1 플립(페이지2 라이트), 복귀 시 0. 클릭 게이트 동기.
 - 스냅: 아래 0.35→다음 / 아래 0.2→복구 / 위 0.35→이전 / 위 0.2→복구. 오실레이션 없음.
-- 핸드오프: 2p 도착 시 `.main1__hero` opacity 0 + 섹션 타이틀 visible(이중 노출 없음). 섹션 타이틀 언어 순환 + 단어 opacity 1.
+- 핸드오프: 2p 도착 시 `.main1__hero` opacity 0 + 섹션 타이틀 visible(이중 노출 없음). 섹션 타이틀 언어 순환(`개발자 김준영입니다。`↔`I'm Kim…`↔`金俊英。`…).
+- 단어 rise: 1p·2p 모두 매 언어 전환마다 `titleIn` reset→in 으로 단어별 스태거 rise(§4). 2p 는 `.is-settled` 게이트.
 - 글라스: `.is-light` 패널 블러로 레이저 비침. 명칭 글라스 위 선명.
 
-> ⚠️ **헤드리스 한계**: 무거운 3D WebGL이 컴포지터/rAF를 점유해 헤드리스에선 타이틀 CSS 전환·`--inv` lerp가 정체되어 보일 수 있음(opacity 0 표시). 실제 GPU 브라우저에선 정상. 렌더 스킵(§7)으로 완화.
+> ⚠️ **헤드리스 한계(중요)**: 무거운 3D WebGL + 레이저 2D 캔버스가 **컴포지터를 점유**해, 헤드리스에선 타이틀의 **단어별 rise(CSS transition)·`--inv` lerp 가 정체**되어 보임(단어 opacity 0 으로 측정됨). **실제 GPU 브라우저에선 정상 재생**(1p·2p 동일 메커니즘, 1p 동작은 사용자 확인). 오프히어로 렌더 스킵(§7)으로 2p 완화. → 시각 검증은 실제 브라우저에서.
 
 ## 10. 주요 튜닝 상수
 
