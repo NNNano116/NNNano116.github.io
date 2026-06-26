@@ -51,8 +51,8 @@ ppp/
 │
 │  ── 앱 코드: Vite react-ts 스캐폴드 (2026-06-22, 빌드 검증 ✔) ──
 ├─ index.html             ✅ Vite 진입
-├─ src/                   ✅ main.tsx(해시 라우터)·App.tsx·assets·*.css
-├─ public/               ✅ favicon.svg·icons.svg
+├─ src/                   ✅ main.tsx(해시 라우터·'/'→Main1)·routes/Main1.*·index.css
+├─ public/               ✅ favicon.svg·og-image.png
 ├─ vite.config.ts        ✅ base:'/'(유저 페이지)·plugin-react
 ├─ package.json          ✅ react 19·vite 8·react-router 8.0.1·ts 6
 ├─ tsconfig*.json        ✅ (app·node 분리)
