@@ -35,7 +35,7 @@ Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects
 | A-11 | **main-1 드래그 안내** | SVG `stroke-dashoffset` draw/erase·마우스+네온 라인+화살표·루프 4s·**입력환경별 라벨(CLICK·SCROLL/TOUCH & DRAG)**·**반응형 크기(`clamp`)** | [main1-hero §10](../main1-hero.md) ✅ |
 | A-12 | **main-1 모바일 반응형** | 레이저 우하단 커버·서브타이틀 좌측 이동·패럴럭스(터치 비활성)·드래그 안내 `clamp` 축소·입력환경별 문구·푸터 제거 | [main1-hero §11](../main1-hero.md) ✅ |
 | A-14 | **사이트 헤더·메타·파비콘** | `index.html` 페이지명(`J·Young portfolio`)·메타 설명·OG/Twitter 카드·theme-color·`lang=ko` / `favicon.svg`(J·Y 글라스 원형) / base 재작성·OG 절대 URL 주의 | [site-meta](../site-meta.md) ✅ |
-| A-13 | **main-1 스크롤 인터랙션** | 3페이지 인플로우·`--inv` 색반전(3/5)·명칭 모프+핸드오프·다국어+단어 rise·**페이지 이동(데스크탑 wheel 섹션 캡 / 모바일 touch 네이티브스크롤+종료스냅=주섹션 바뀌면 그 섹션 top 정렬, preventDefault 없음→AOS stuck 제거)**·**디자인 이력서 2단(실데이터·org·role 한 줄·헤더 클리어런스·의미단위 줄바꿈)**·글라스(iOS/PC 얇은유리+blur / 안드로이드 .is-android 불투명·다크노출 방지 color-mix bg+overscroll·레이저 오프히어로 렌더스킵)·**리빌(is-settled/IO)**·맨위로 버튼·반응형 | [main1-scroll-interactions](../main1-scroll-interactions.md) ✅ |
+| A-13 | **main-1 스크롤 인터랙션** | 3페이지 인플로우·`--inv` 색반전(3/5)·명칭 모프+핸드오프·다국어+단어 rise·**페이지 이동 UX 확정(데스크탑 휠 '한 제스처=1섹션' 락 모델 / 모바일 터치 '완전 제어' 드래그 — touch-action:none·1:1 추종·16% 임계/플릭 전환·상단 갭 없음·한 제스처=1페이지)**·**디자인 이력서 2단(실데이터·org·role 한 줄·헤더 클리어런스·의미단위 줄바꿈)**·글라스(iOS/PC 얇은유리+blur / 안드로이드 .is-android 불투명·다크노출 방지 color-mix bg+overscroll·레이저 오프히어로 렌더스킵)·**리빌(is-settled/IO)**·맨위로 버튼·반응형 | [main1-scroll-interactions](../main1-scroll-interactions.md) ✅ |
 
 ## 3. 실제 확인사항 (작업 전 체크리스트)
 
