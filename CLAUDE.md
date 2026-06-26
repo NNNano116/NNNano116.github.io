@@ -6,7 +6,7 @@
 
 > 🟡 **현재 상태**: 스택(React+Vite+GH Pages)·개발 스킬 문서·git/`.env` 규약 **확정**.
 > **MCP**: `context7`·`playwright` 연결됨(D-1). **버전 고정**(D-2/D-3): Node 24.17.0 · React 19.2.7 · Vite 8.0.16 · TS 6.0.3 · react-router 8.0.1 · three 0.184.0 · npm 11 → SSOT [`mcp-setup.md`](./docs/mcp-setup.md).
-> ✅ **초기화·배포 완료**: 스캐폴드+`base`+해시 라우터+`deploy.yml`, **빌드 검증 ✔**, **GH Pages 라이브** https://nnnano116.github.io/nano-portfolio/ → [`project-init.md`](./docs/project-init.md).
+> ✅ **초기화·배포 완료**: 스캐폴드+`base`+해시 라우터+`deploy.yml`, **빌드 검증 ✔**, **GH Pages 라이브**(유저 페이지) https://nnnano116.github.io/ → [`project-init.md`](./docs/project-init.md).
 > ✅ **`/main-1` 메인(히어로) + 자기소개(2P) 섹션 개발 완료** (2026-06-26): 3D 구체 물리 히어로 → [`main1-hero.md`](./docs/main1-hero.md), 3페이지 스크롤 인터랙션(색반전·명칭 모프·디자인 이력서)·**페이지 이동 UX 확정**(데스크탑 휠 '한 제스처=1섹션' 락 / 모바일 터치 '완전 제어' 드래그)·글라스 OS 분기 → [`main1-scroll-interactions.md`](./docs/main1-scroll-interactions.md). **다음: 3P(// works 포트폴리오) 콘텐츠.**
 
 ---
@@ -53,7 +53,7 @@ ppp/
 ├─ index.html             ✅ Vite 진입
 ├─ src/                   ✅ main.tsx(해시 라우터)·App.tsx·assets·*.css
 ├─ public/               ✅ favicon.svg·icons.svg
-├─ vite.config.ts        ✅ base:'/nano-portfolio/'·plugin-react
+├─ vite.config.ts        ✅ base:'/'(유저 페이지)·plugin-react
 ├─ package.json          ✅ react 19·vite 8·react-router 8.0.1·ts 6
 ├─ tsconfig*.json        ✅ (app·node 분리)
 ├─ eslint.config.js      ✅ flat config

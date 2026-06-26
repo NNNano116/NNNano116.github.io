@@ -27,7 +27,7 @@ jobs:
           node-version: 24          # docs/mcp-setup.md D-2 (Node 24 LTS)
           cache: npm
       - run: npm ci
-      - run: npm run build          # tsc -b && vite build → dist/ (base=/nano-portfolio/)
+      - run: npm run build          # tsc -b && vite build → dist/ (base=/)
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

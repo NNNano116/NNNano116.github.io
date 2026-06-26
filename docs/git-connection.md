@@ -13,14 +13,14 @@
 | 항목 | 값 |
 |------|-----|
 | GitHub 계정 | `NNNano116` |
-| 저장소 | **`nano-portfolio`** (이전명 `ppp` → rename, GitHub 자동 리다이렉트) |
-| 저장소 URL | https://github.com/NNNano116/nano-portfolio |
+| 저장소 | **`NNNano116.github.io`** (이전명 `ppp`→`nano-portfolio`→rename, GitHub 자동 리다이렉트) |
+| 저장소 URL | https://github.com/NNNano116/NNNano116.github.io |
 | 가시성 | **PUBLIC** |
-| 저장소 모델 | **프로젝트 페이지** ([`git-setup.md §1`](./git-setup.md)) |
+| 저장소 모델 | **사용자 페이지** (레포명 = `<계정>.github.io`) ([`git-setup.md §1`](./git-setup.md)) |
 | 기본 브랜치 | `main` (`origin/main` 추적) |
-| 원격(`origin`) | `https://github.com/NNNano116/nano-portfolio.git` |
-| 배포 URL | **`https://NNNano116.github.io/nano-portfolio/`** ✅ 라이브(HTTP 200) |
-| `base` | `'/nano-portfolio/'` 적용됨 (`vite.config.ts`) → 허브 **B** [`deploy.md`](./deploy.md) |
+| 원격(`origin`) | `https://github.com/NNNano116/NNNano116.github.io.git` |
+| 배포 URL | **`https://NNNano116.github.io/`** (유저 페이지 전환) |
+| `base` | `'/'` 적용됨 (`vite.config.ts`) → 허브 **B** [`deploy.md`](./deploy.md) |
 | Pages | **활성화됨** — Source `GitHub Actions`(`build_type=workflow`), HTTPS 강제. 첫 배포 성공(2026-06-22) |
 | 첫 커밋 | `9be5131` (허브 문서 + git/.env 규약 초기 커밋) |
 
@@ -53,16 +53,16 @@
 | `GIT_USER_EMAIL` | `237364871+NNNano116@users.noreply.github.com` | 공개(noreply) |
 | `GITHUB_USERNAME` | `NNNano116` | 공개 |
 | `GITHUB_TOKEN` | *(비움 — gh keyring 사용)* | 비밀(채울 경우) |
-| `GIT_REMOTE_URL` | `https://github.com/NNNano116/nano-portfolio.git` | 공개 |
+| `GIT_REMOTE_URL` | `https://github.com/NNNano116/NNNano116.github.io.git` | 공개 |
 
 ## 5. 재현 / 검증 명령
 
 ```bash
 # 연동 상태 확인
 gh auth status                 # NNNano116 (keyring), Active
-git remote -v                  # origin → .../nano-portfolio.git
+git remote -v                  # origin → .../NNNano116.github.io.git
 git branch -vv                 # main [origin/main]
-gh repo view NNNano116/nano-portfolio --json name,visibility,url
+gh repo view NNNano116/NNNano116.github.io --json name,visibility,url
 
 # .env 미추적 검증 (출력 없어야 정상)
 git ls-files | grep -E "^\.env$"
