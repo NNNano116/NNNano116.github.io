@@ -31,4 +31,5 @@ React + Vite 기반 정적 사이트(GitHub Pages) 프로젝트의 상세 문서
 | [project-init.md](./project-init.md) | **초기화·설정 런북** ✅ — 스캐폴드·`base`·해시 라우터·`deploy.yml` 실행 절차(nano-portfolio) |
 | [portfolio-plan.md](./portfolio-plan.md) | **앱 구조·개발 계획** 🟡 — 멀티 라우트(해시)·페이지(Home/About/Projects/Contact)·슬라이더·착수 순서·차단항목 |
 | [main1-hero.md](./main1-hero.md) | **main-1 3D 구체 물리 히어로** ✅ — `three.js` 씬·물리 모델(자석·부유·흐름·충돌·표면장력)·마우스/드래그/클릭 반응·속도 임계값 반발(떨림 제거)·튜닝 상수 |
+| [site-meta.md](./site-meta.md) | **사이트 헤더·메타·파비콘** ✅ (2026-06-26) — 페이지명 `J·Young portfolio`·메타 설명·OG/Twitter 카드·theme-color(light/dark)·`lang=ko` / `favicon.svg` J·Y 글라스 원형(블루↔퍼플) / base 재작성·OG 절대 URL 주의 |
 | [main1-scroll-interactions.md](./main1-scroll-interactions.md) | **main-1 스크롤 인터랙션 시스템** ✅ (2026-06-25) — 3페이지 인플로우 자연 스크롤·다크↔라이트 색반전(`--inv` 3/5)·명칭 모프+핸드오프·11개 다국어+단어 rise·**섹션 캡 페이지 이동(데스크탑 wheel·모바일 touch/drag 동일 — 경계 임계 전환·내부 자유 스크롤)**·**디자인 이력서 2단(실데이터 확정·org·role 한 줄·헤더 클리어런스)**·라이트 글라스(iOS/PC 얇은유리+blur·안드로이드 불투명·다크노출 방지)·**리빌(is-settled/IO)**·맨위로 버튼·반응형 |
