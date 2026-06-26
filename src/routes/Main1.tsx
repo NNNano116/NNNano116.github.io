@@ -462,69 +462,110 @@ export default function Main1() {
         }
       }
     }
-    // ── 모바일 터치/드래그: '네이티브 스크롤(관성 그대로) + 스크롤 종료 시 스냅'.
-    //    preventDefault 를 쓰지 않아(안드로이드에서 초기 작은 이동에 네이티브 스크롤이 먼저 시작되면
-    //    이후 preventDefault 가 무시돼 멈추던 버그 원천 제거). 손가락을 떼고 관성이 멎으면:
-    //    뷰포트 중앙이 가리키는 '주 섹션' 이 바뀌었으면 → 그 섹션 최상단으로 정렬(= 도착한 페이지 시작점이 맨 위로),
-    //    안 바뀌었는데 그 섹션 top 위로 끌려가 있으면 → 현재 섹션 top 으로 복귀. 섹션 내부(긴 이력) 읽기는 스냅 안 함. ──
-    let touchActive = false
-    let touchStartTop = -1 // 터치 시작 시 '주 섹션' 의 top
-    let snapTimer = 0
-    function curSecByMid(y: number) {
-      const vh = el!.clientHeight
-      const mid = y + vh * 0.5 // 뷰포트 중앙
-      const secs = tops()
-      return secs.find((s) => mid >= s.top && mid < s.bottom) || secs[secs.length - 1]
-    }
-    function doSnap() {
-      touchActive = false
-      const y = el!.scrollTop
-      const primary = curSecByMid(y)
-      if (primary.top !== touchStartTop) animateTo(primary.top) // 주 섹션 바뀜 → 새 섹션 최상단 정렬
-      else if (y < primary.top - 4) animateTo(primary.top) // 인접쪽으로 끌었으나 못 넘김 → 현재 섹션 top 복귀
-      // else: 섹션 내부 읽는 중 → 스냅 안 함
-    }
-    function scheduleSnap() {
-      clearTimeout(snapTimer)
-      snapTimer = window.setTimeout(() => {
-        if (!touchActive) return
-        if (animating) {
-          scheduleSnap() // 전환 애니메이션 중이면 미룸
-          return
-        }
-        doSnap()
-      }, 120)
-    }
+    // ── 모바일 터치/드래그: '완전 제어'(CSS touch-action:none). 손가락을 1:1 로 따라오고, 놓을 때 판단.
+    //    네이티브 스크롤/관성을 아예 안 써서 ① 안드로이드 preventDefault 레이스 없음 ② 상단 오버스크롤 갭 없음.
+    //    · 드래그 중: scrollTop = 시작 + 드래그(문서 [0,max] 클램프 → 갭 없음, 다음 페이지가 손가락 따라 슬라이드 인).
+    //    · 놓을 때: '시작이 섹션 경계'였고 그 방향으로 임계(16%)·플릭이면 → 다음/이전 섹션 한 페이지 전환, 아니면 복귀.
+    //               섹션 내부에서 시작했으면 → 그 섹션 범위 안에서 관성(긴 이력 읽기). 한 제스처 = 최대 1페이지. ──
+    let tStartY = 0
+    let tStartScroll = 0
+    let tSecTop = 0
+    let tSecBot = 0
+    let tReadBot = 0 // 이 섹션 내 스크롤 가능한 최하단(= bottom-vh)
+    let tLastY = 0
+    let tLastT = 0
+    let tVel = 0 // px/ms, + = 아래로 스크롤
+    let tDragging = false
+    let tMomRaf = 0
     function onTouchStart(e: TouchEvent) {
       if (e.touches.length !== 1) return // 핀치 등은 무시
-      cancelAnimationFrame(raf) // 진행 중 전환 즉시 취소(새 터치 우선)
-      stopWheel() // 휠 애니/락 중단(하이브리드 기기 대비)
+      cancelAnimationFrame(raf)
+      cancelAnimationFrame(tMomRaf)
+      stopWheel()
       animating = false
       animatingRef.current = false
-      clearTimeout(snapTimer)
-      touchActive = true
-      touchStartTop = curSecByMid(el!.scrollTop).top
+      const vh = el!.clientHeight
+      tStartY = e.touches[0].clientY
+      tStartScroll = el!.scrollTop
+      tLastY = tStartY
+      tLastT = e.timeStamp
+      tVel = 0
+      tDragging = true
+      const secs = tops()
+      const mid = tStartScroll + vh * 0.5
+      const cur = secs.find((s) => mid >= s.top && mid < s.bottom) || secs[secs.length - 1]
+      tSecTop = cur.top
+      tSecBot = cur.bottom
+      tReadBot = Math.max(cur.top, cur.bottom - vh)
+    }
+    function onTouchMove(e: TouchEvent) {
+      if (!tDragging || e.touches.length !== 1) return
+      e.preventDefault()
+      const y = e.touches[0].clientY
+      const t = e.timeStamp
+      const dt = t - tLastT
+      if (dt > 0) tVel = (tLastY - y) / dt
+      tLastY = y
+      tLastT = t
+      const maxS = el!.scrollHeight - el!.clientHeight
+      el!.scrollTop = Math.max(0, Math.min(maxS, tStartScroll + (tStartY - y))) // 1:1 추종·문서 클램프(갭 없음)
+    }
+    function momentum() {
+      let v = tVel * 16 // px/frame
+      const stepM = () => {
+        v *= 0.92
+        let ns = el!.scrollTop + v
+        if (ns <= tSecTop) {
+          ns = tSecTop
+          v = 0
+        }
+        if (ns >= tReadBot) {
+          ns = tReadBot
+          v = 0
+        }
+        el!.scrollTop = ns
+        if (Math.abs(v) > 0.4) tMomRaf = requestAnimationFrame(stepM)
+      }
+      if (Math.abs(v) > 0.4) tMomRaf = requestAnimationFrame(stepM)
     }
     function onTouchEnd() {
-      if (touchActive) scheduleSnap() // 손 뗌 → 관성이 멎으면 스냅(아래 onScrollSettle 이 관성 동안 계속 미룸)
-    }
-    function onScrollSettle() {
-      if (touchActive) scheduleSnap() // 관성 스크롤이 이어지는 동안 스냅을 멎을 때까지 미룬다
+      if (!tDragging) return
+      tDragging = false
+      const vh = el!.clientHeight
+      const secs = tops()
+      const rawDy = tStartY - tLastY // 총 드래그(위로 +)
+      const TH = vh * 0.16 // 전환 임계(16%)
+      const FLICK = 0.45 // 플릭 속도(px/ms)
+      if (rawDy > 0) {
+        // 아래로(다음 섹션): 시작이 섹션 하단이면 전환 판단, 아니면 내부 관성(읽기)
+        if (tStartScroll >= tReadBot - 4) {
+          const next = secs.find((s) => s.top > tSecBot - 4)
+          if (next && (rawDy > TH || tVel > FLICK)) animateTo(next.top)
+          else animateTo(tReadBot) // 복귀
+        } else momentum()
+      } else if (rawDy < 0) {
+        // 위로(이전 섹션)
+        if (tStartScroll <= tSecTop + 4) {
+          const prev = [...secs].reverse().find((s) => s.top < tSecTop - 4)
+          if (prev && (-rawDy > TH || tVel < -FLICK)) animateTo(prev.top)
+          else animateTo(tSecTop) // 복귀
+        } else momentum()
+      }
     }
     el.addEventListener('wheel', onWheel, { passive: false })
     el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
     el.addEventListener('touchend', onTouchEnd, { passive: true })
     el.addEventListener('touchcancel', onTouchEnd, { passive: true })
-    el.addEventListener('scroll', onScrollSettle, { passive: true })
     return () => {
       el.removeEventListener('wheel', onWheel)
       el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
       el.removeEventListener('touchend', onTouchEnd)
       el.removeEventListener('touchcancel', onTouchEnd)
-      el.removeEventListener('scroll', onScrollSettle)
-      clearTimeout(snapTimer)
       clearTimeout(idleTimer)
       cancelAnimationFrame(raf)
+      cancelAnimationFrame(tMomRaf)
       wheelStopRef.current = null
     }
   }, [])
