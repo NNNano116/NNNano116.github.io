@@ -33,7 +33,7 @@ Node LTS · npm/pnpm · **멀티 라우트·페이지 구성(Home/About/Projects
 | A-10 | **main-1 배경 레이저** | 2D 캔버스·고정 63.1°·`min(W·0.07,150)`·상단 가장자리 앵커+좌하 연장·드리프트·헤드 점·커서 밝힘·**모바일 우하단 커버(`driftRange=W·1.08+H·0.55`)** | [main1-hero §9](../main1-hero.md) ✅ |
 | A-11 | **main-1 드래그 안내** | SVG `stroke-dashoffset` draw/erase·마우스+네온 라인+화살표·루프 4s·**입력환경별 라벨(CLICK·SCROLL/TOUCH & DRAG)**·**반응형 크기(`clamp`)** | [main1-hero §10](../main1-hero.md) ✅ |
 | A-12 | **main-1 모바일 반응형** | 레이저 우하단 커버·서브타이틀 좌측 이동·패럴럭스(터치 비활성)·드래그 안내 `clamp` 축소·입력환경별 문구·푸터 제거 | [main1-hero §11](../main1-hero.md) ✅ |
-| A-13 | **main-1 스크롤 인터랙션** | 3페이지 인플로우·`--inv` 색반전(3/5)·명칭 모프+핸드오프·다국어+단어 rise·**섹션 캡 페이지 이동(데스크탑 wheel·모바일 touch/drag 동일 — 경계 임계 전환·내부 자유 스크롤)**·**디자인 이력서 2단(실데이터·org·role 한 줄·헤더 클리어런스·의미단위 줄바꿈)**·글라스·**리빌(is-settled/IO)**·맨위로 버튼·반응형 | [main1-scroll-interactions](../main1-scroll-interactions.md) ✅ |
+| A-13 | **main-1 스크롤 인터랙션** | 3페이지 인플로우·`--inv` 색반전(3/5)·명칭 모프+핸드오프·다국어+단어 rise·**섹션 캡 페이지 이동(데스크탑 wheel·모바일 touch/drag 동일 — 경계 임계 전환·내부 자유 스크롤)**·**디자인 이력서 2단(실데이터·org·role 한 줄·헤더 클리어런스·의미단위 줄바꿈)**·글라스(모바일 블러 폴백 pointer:coarse·다크노출 방지 color-mix bg+overscroll)·**리빌(is-settled/IO)**·맨위로 버튼·반응형 | [main1-scroll-interactions](../main1-scroll-interactions.md) ✅ |
 
 ## 3. 실제 확인사항 (작업 전 체크리스트)
 

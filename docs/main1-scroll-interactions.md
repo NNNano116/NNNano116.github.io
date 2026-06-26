@@ -4,8 +4,9 @@
 > [`main1-hero.md`](./main1-hero.md), 라우트/구조는 [`portfolio-plan.md`](./portfolio-plan.md),
 > 운영 제약(정적·상대경로·해시라우팅)은 [`CLAUDE.md §1`](../CLAUDE.md)을 **참조**(값 복제 금지).
 >
-> ✅ **상태: 확정** (2026-06-25). 빌드 검증 ✔ · Playwright로 `--inv`·휠 섹션 캡·핸드오프·리빌·반응형 측정 ✔.
-> 구현: `src/routes/Main1.tsx`(스크롤 effect·휠 캡·리빌 IO·다국어·3D) · `src/routes/Main1.css`(전환·이력서·글라스·반응형).
+> ✅ **상태: 확정** (2026-06-26). 빌드 검증 ✔ · Playwright로 `--inv`·휠/터치 섹션 캡·핸드오프·리빌·반응형 측정 ✔.
+> 구현: `src/routes/Main1.tsx`(스크롤 effect·휠/터치 섹션 캡·리빌 IO·다국어·3D) · `src/routes/Main1.css`(전환·이력서·글라스·반응형).
+> 모바일 보강: 터치 섹션 캡(§5-2)·글라스 블러 폴백·다크 노출 방지(§6-2).
 
 ---
 
@@ -115,7 +116,8 @@
 - `box-sizing:border-box`로 `seg__inner` 가 max-width 에 padding 포함 → 타이틀·콘텐츠 좌측 정렬 일치.
 
 ### 6-2. 글라스 패널 (`.seg__inner::before`)
-- 라이트 전환(`.is-light`) 시 부드럽게 등장. `backdrop-filter: blur(5px) saturate(1.18)` + 옅은 sheen → 레이저·격자가 살짝 흐릿하게 비침. 라운드+테두리.
+- 라이트 전환(`.is-light`) 시 부드럽게 등장. `backdrop-filter: blur(6px) saturate(1.18)` + 아주 옅은 sheen → 레이저·격자가 더 비침. 라운드+테두리.
+- **투명도(흰색 틴트, 상단→하단)**: PC·터치 PC(≥769) = `0.1 / 0.045 / 0.018`(+blur) / 실제 모바일(폰 ≤768+터치) = `0.4 / 0.31 / 0.26`(블러 비의존). → 더 투명하면 패널감 약해짐(특히 블러 없는 폰).
 - ⚠️ **opacity 는 반드시 `::before` 자신에** 둔다 — 부모(`seg__inner`)에 opacity 를 주면 자식 `backdrop-filter` 가 격리되어 **블러가 사라진다**(과거 버그). 콘텐츠 페이드가 필요하면 별도 래퍼(`.seg__fade`) 사용.
 - ⚠️ **모바일 블러 안 보임 대응**: 안드로이드 크롬 등에서 backdrop-filter 가 '지원되지만' **`<canvas>`(레이저·3D) 위에선 블러가 렌더되지 않는** 케이스가 있음(`@supports` 로 못 잡음). → **`@media (pointer: coarse) and (max-width: 768px)`** (=실제 모바일/1열)에서만 글라스를 **블러 비의존 반투명 패널(0.4)** 로 둬 항상 보이게. **그 외(PC·터치 PC ≥769)는 얇은 유리(0.1)+blur 유지** — 레이저 비침. (`pointer:coarse` 만으론 '블러 되는 터치 PC' 와 '블러 안 되는 폰' 을 못 가려 폭 조건을 함께 둠.) iOS 보강으로 `-webkit-overflow-scrolling:touch` 도 제거.
 - 타이틀(`.seg__head`)이 `seg__inner` 안에 인플로우로 있어 **글라스가 // profile·명칭+콘텐츠 전체를 감싼다**.
