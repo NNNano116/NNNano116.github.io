@@ -117,7 +117,7 @@
 ### 6-2. 글라스 패널 (`.seg__inner::before`)
 - 라이트 전환(`.is-light`) 시 부드럽게 등장. `backdrop-filter: blur(5px) saturate(1.18)` + 옅은 sheen → 레이저·격자가 살짝 흐릿하게 비침. 라운드+테두리.
 - ⚠️ **opacity 는 반드시 `::before` 자신에** 둔다 — 부모(`seg__inner`)에 opacity 를 주면 자식 `backdrop-filter` 가 격리되어 **블러가 사라진다**(과거 버그). 콘텐츠 페이드가 필요하면 별도 래퍼(`.seg__fade`) 사용.
-- ⚠️ **모바일(iOS) 블러 안 보임 → `.main1` 의 `-webkit-overflow-scrolling: touch` 제거**가 핵심. 이 속성 + `position:fixed`(backdrop)가 별도 합성 레이어를 만들어 backdrop-filter 가 고정 배경을 샘플링하지 못했음. 보강: sheen 살짝 ↑ + `@supports not (backdrop-filter)` 폴백(더 불투명 패널).
+- ⚠️ **모바일 블러 안 보임 대응**: 안드로이드 크롬 등에서 backdrop-filter 가 '지원되지만' **`<canvas>`(레이저·3D) 위에선 블러가 렌더되지 않는** 케이스가 있음(`@supports` 로 못 잡음). → **`@media (pointer: coarse)`** 에서 글라스를 **블러에 의존하지 않는 반투명 프로스트 패널(0.5)** 로 둬 항상 보이게(PC `pointer:fine` 는 얇은 유리 0.16 + blur 유지). iOS 보강으로 `-webkit-overflow-scrolling:touch` 도 제거.
 - 타이틀(`.seg__head`)이 `seg__inner` 안에 인플로우로 있어 **글라스가 // profile·명칭+콘텐츠 전체를 감싼다**.
 - ⚠️ **오버스크롤/틈에 다크 배경 노출 방지**: `.main1` 의 배경을 `color-mix(#0d181f, light var(--p))` 로 두어 **--inv 따라 다크↔라이트 전환**(1P 다크 / 2P·3P 라이트). + `overscroll-behavior: none`(바운스 차단). (모바일에서 라이트 2P/3P 하단에 1P 다크가 노출되던 문제)
 

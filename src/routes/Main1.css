@@ -713,7 +713,7 @@
   transform: none;
   pointer-events: none;
 }
-/* backdrop-filter 미지원/비활성 환경(일부 모바일) 폴백 — 더 불투명한 프로스트 패널로 가독성 확보 */
+/* backdrop-filter 미지원 환경 폴백 — 더 불투명한 프로스트 패널로 가독성 확보 */
 @supports not (
   (backdrop-filter: blur(6px)) or (-webkit-backdrop-filter: blur(6px))
 ) {
@@ -724,6 +724,20 @@
       rgba(247, 250, 253, 0.66) 0%,
       rgba(247, 250, 253, 0.5) 60%,
       rgba(247, 250, 253, 0.42) 100%
+    );
+  }
+}
+/* ⚠️ 터치 기기(모바일): 안드로이드 크롬 등에서 backdrop-filter 가 '지원되지만' 캔버스(레이저·3D) 위에선
+   블러가 렌더되지 않는 경우가 있어 @supports 로는 못 잡음 → pointer:coarse 에서 '블러에 의존하지 않는'
+   반투명 프로스트 패널로 항상 보이게(블러는 되는 기기에선 추가로 적용). PC(pointer:fine)는 얇은 유리 유지. */
+@media (pointer: coarse) {
+  .seg--resume .seg__inner::before,
+  .seg--work .seg__inner::before {
+    background: linear-gradient(
+      150deg,
+      rgba(250, 252, 255, 0.5) 0%,
+      rgba(248, 251, 254, 0.4) 55%,
+      rgba(246, 250, 254, 0.34) 100%
     );
   }
 }
