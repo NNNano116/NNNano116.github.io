@@ -103,6 +103,17 @@
 - 히어로 안내(`scrollToNext`): 다음(이력) 섹션으로 easeInOutCubic ~1.2s.
 - **우측 하단 '맨 위로' 버튼**(`.main1__top`): `opacity:var(--inv)` → 1→2 전환에 맞춰 화살표가 자연스럽게 생성/소멸. 클릭 시 `scrollToTop`(최상단으로 easeInOutCubic). `reduced-motion` 비활성.
 
+### 5-4. 헤더 네비게이션 — 반응형(게이지 / 풀스크린 메뉴) ⭐ (2026-06-30)
+> 헤더 메뉴를 **입력·공간 환경별로 분기**. 현재 섹션은 `page`(0/1/2) state 로 추적(스크롤 effect 의 `computeTarget` 에서 뷰포트 중앙 기준 `mid = scrollTop + vh/2` 로 산출, 변화 시에만 `setPage`).
+- **공용 이동 함수 `scrollToSection(idx)`**: 대상 섹션 `offsetTop`(0=히어로는 0)으로 **단일 easeInOutCubic 스크롤**(`dur = min(1400, 520 + |dist|·0.5)ms`). 단일 연속 스크롤이라 **1→3·3→1 도 중간 섹션을 '거쳐서' 자연스럽게 흐른다**('맨 위로'와 동일 메커니즘). 시작 시 `wheelStopRef.current?.()` 로 휠 락/lerp 해제(충돌 방지) + `animatingRef` 세팅.
+- **PC·큰 태블릿(≥769) = 우측 중앙 세로 슬라이더 게이지**(`.main1__gauge`): 점(비활성 hollow 링) + 연결 트랙 + **진행도 악센트 fill**(`--seg=page` → 트랙의 `seg/2` 높이까지 차오름) + **활성 노드**(악센트 코어·글로우·은은한 펄스 링 `gaugePulse`). 영역 클릭 → `scrollToSection`. 메뉴명은 평소 숨김(호버 툴팁 `.main1__gauge-tip`만). 색은 `--p` 로 다크↔라이트 적응. 햄버거는 `display:none`. **게이지 길이(=점 간격 `gap: clamp(38px, 5vw, 82px)`)는 vw 기반** → 넓은 PC 에서 길고(≈278px@1920) 큰 태블릿으로 좁아질수록 점진 축소(≈216px@1024 → ≈194px@800).
+- **모바일·작은 태블릿(≤768) = 풀스크린 슬라이드 메뉴**(`.main1__nav`): 햄버거 클릭 → `menuOpen` → 패널이 **우→좌 `translateX(100%)→0`**(꽉 찬 화면). 항목 **Main / Profile / works**(번호 01·02·03 + 라벨), 현재 페이지 **활성 강조(악센트 언더라인)**, 호버 시 `translateX` 슬라이드. 항목 클릭 → `setMenuOpen(false)` 후 `scrollToSection`. 스크림 클릭·ESC·**좌→우 스와이프**·데스크탑 폭 리사이즈로 닫힘. 패널 배경도 `--p` 로 다크↔라이트 적응(`-webkit-` 먼저/표준 마지막 — §6-2a 함정 준수). 게이지는 `display:none`.
+  - **스와이프-투-클로즈**(2026-06-30): 메뉴가 우→좌로 열렸으므로 **반대 방향(좌→우) 드래그로 닫는다**. 패널에 `touch-action:none` → JS 가 완전 제어(`onNavTouch*`): 방향 락(세로 우세면 무시)·`translateX(dx)` 1:1 추종 + 스크림 opacity 페이드, 놓을 때 **드래그 ≥ 패널폭 30% 또는 우향 플릭(vx>0.5)** 이면 `setMenuOpen(false)`·미만이면 복귀(인라인 transform 제거 → CSS `.is-open` 전환이 이어받음).
+  - **배경 스크롤 잠금**: 패널은 `.main1` 자식이라 휠이 버블로 배경 네비를 움직이던 버그가 있었음 → 배경 휠/터치 핸들러가 `menuOpenRef` 가드로 무시(휠은 `preventDefault` 로 네이티브 스크롤도 차단)·스크롤바는 `.main1.is-nav-open { scrollbar-width:none }` + `::-webkit-scrollbar{display:none}` 로 숨김.
+  - ⚠️ **`overflow:hidden` 으로 잠그지 말 것**(2026-06-30 회귀 수정): 스크롤 컨테이너(`.main1`)에 `overflow:hidden` 을 토글하면 브라우저가 `scrollTop` 을 리셋/복원하며 **가짜 scroll 이벤트**를 일으켜 `--inv`/`is-page-2` 가 잘못 계산되고, 닫은 뒤 **위치는 히어로(0)로 튀고 테마는 라이트로 남아 '빈 라이트 화면'** 으로 고착됐다. → overflow 는 건드리지 않고 위처럼 스크롤바만 숨김.
+  - **재동기화 안전장치**: 스크롤바 토글 리플로우가 섹션 높이(`wTop`)를 흔들어 `is-page-2`(리빌 게이트)가 어긋날 수 있어, 메뉴 토글마다 `resyncRef`(스크롤 effect 가 노출)로 **실제 `scrollTop` 기준 `computeTarget` 강제 재실행** → 콘텐츠 리빌/테마 고착 방지(닫힘 후 상태가 항상 실제 위치와 일치).
+- 브레이크포인트 **768/769** 는 기존 이력 2열↔1열(§8)과 동일 경계.
+
 ## 6. 2P 디자인 이력서 + 글라스 + 리빌 ⭐
 
 ### 6-1. 디자인 이력서 (2단 / 세로 1단) — 확정
@@ -182,6 +193,7 @@
 |----------|------|-----|
 | 색 전환 | `INV.TRIGGER_FRAC` / `LERP` | 0.6(3/5) / 0.16 |
 | 섹션 캡 | `animateTo dur` | `min(720, 360+|dist|·0.34)ms` (easeInOutCubic, wheel·touch 공용) |
+| 헤더 네비 | `scrollToSection dur` / 브레이크포인트 | `min(1400, 520+|dist|·0.5)ms` (1→3 멀수록 천천히) / 게이지≥769·메뉴≤768 |
 | 터치 전환 임계 | 거리 / 플릭 / 따라옴 | `vh·0.14` / `1.3 px/ms` / `tDrag·0.42`(최대 0.55vh) |
 | CSS 스냅 | 전 화면 | `none` (JS wheel·touch 가 제어) |
 | 명칭 모프 | left edge / scale / 페이드 | 15vw / 0.5 / `(0.9-inv)*10` |
@@ -193,6 +205,6 @@
 
 ## 11. 변경 관리 / 정본
 
-- 색 전환·`--inv` → §2, 명칭/핸드오프 → §3, 다국어/rise → §4, **페이지 이동(휠 캡/스냅) → §5**, **이력서/글라스/리빌 → §6**, 패럴럭스/3D → §7, 반응형 → §8 먼저 갱신 후 코드.
+- 색 전환·`--inv` → §2, 명칭/핸드오프 → §3, 다국어/rise → §4, **페이지 이동(휠 캡/스냅) → §5**, **헤더 네비(게이지/풀스크린 메뉴) → §5-4**, **이력서/글라스/리빌 → §6**, 패럴럭스/3D → §7, 반응형 → §8 먼저 갱신 후 코드.
 - 히어로 비주얼(구체 물리·레이저·드래그 안내)은 [`main1-hero.md`](./main1-hero.md). 라우트/구조는 [`portfolio-plan.md`](./portfolio-plan.md).
 - 소스: `src/routes/Main1.tsx`(스크롤·휠 캡·리빌·다국어·3D) · `src/routes/Main1.css`(전환·이력서·글라스·반응형) · `src/main.tsx`(라우트).

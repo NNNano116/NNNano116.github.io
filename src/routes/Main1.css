@@ -174,6 +174,319 @@
 .main1__menu:hover span:last-child {
   transform: translateY(-1px);
 }
+/* 햄버거는 모바일/작은 태블릿(≤768)에서만 — PC/큰 태블릿은 우측 게이지 사용 */
+@media (min-width: 769px) {
+  .main1__menu {
+    display: none;
+  }
+}
+
+/* ── 데스크탑/큰 태블릿(≥769): 우측 중앙 세로 슬라이더 게이지 ──
+   점(비활성) ↔ 동그라미(활성) + 연결 세로선. 클릭 시 해당 섹션으로 자연 스크롤(scrollToSection).
+   색은 --p 로 다크↔라이트 테마 따라 가독성 유지. 트랜지션으로 부드럽게 변화. */
+.main1__gauge {
+  --gauge-pad: 18px; /* 상하 패딩 = 첫/끝 점 중심까지의 여백(트랙·fill 정렬 기준) */
+  position: fixed;
+  top: 50%;
+  right: clamp(22px, 3vw, 48px);
+  transform: translateY(-50%);
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 점 간격 = 게이지(스크롤바) 길이. vw 기반 clamp → PC 에서 길고, 큰 태블릿(≤1200~769)으로
+     좁아질수록 길이가 점진적으로 줄어든다. (게이지 노출 구간 ≥769) */
+  gap: clamp(38px, 5vw, 82px);
+  padding: var(--gauge-pad) 9px;
+}
+/* 점들을 잇는 세로 트랙(첫 점 중심 → 끝 점 중심) — 가늘고 은은하게 */
+.main1__gauge::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: var(--gauge-pad);
+  bottom: var(--gauge-pad);
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: color-mix(in srgb, rgba(236, 240, 248, 0.22), rgba(14, 23, 38, 0.16) var(--p));
+  transition: background 0.4s ease;
+}
+/* 진행도 fill — 현재 페이지(--seg: 0/1/2)까지 악센트가 차오르는 슬라이더 게이지 */
+.main1__gauge::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: var(--gauge-pad);
+  width: 2px;
+  transform: translateX(-50%);
+  height: calc((100% - var(--gauge-pad) * 2) * var(--seg, 0) / 2);
+  border-radius: 2px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, rgba(0, 174, 255, 0.35), rgba(59, 130, 246, 0.3) var(--p)),
+    color-mix(in srgb, #00aeff, #3b82f6 var(--p))
+  );
+  box-shadow: 0 0 10px color-mix(in srgb, rgba(0, 174, 255, 0.5), rgba(59, 130, 246, 0.35) var(--p));
+  transition: height 0.62s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;
+}
+.main1__gauge-dot {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+/* 비활성 = 정제된 hollow 링(inset 링 → 레이아웃 시프트 없음) */
+.main1__gauge-mark {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px
+    color-mix(in srgb, rgba(236, 240, 248, 0.55), rgba(14, 23, 38, 0.42) var(--p));
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), height 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.45s ease, box-shadow 0.45s ease, transform 0.3s ease;
+}
+.main1__gauge-dot:hover .main1__gauge-mark {
+  transform: scale(1.4);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, #cfe6ff, #1b2740 var(--p));
+}
+/* 활성 = 악센트 코어 + 얇은 링 + 부드러운 글로우 */
+.main1__gauge-dot.is-active .main1__gauge-mark {
+  width: 12px;
+  height: 12px;
+  transform: none;
+  background: color-mix(in srgb, #00aeff, #3b82f6 var(--p));
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, rgba(0, 174, 255, 0.32), rgba(59, 130, 246, 0.28) var(--p)),
+    0 0 18px 1px color-mix(in srgb, rgba(0, 174, 255, 0.55), rgba(59, 130, 246, 0.4) var(--p));
+}
+/* 활성 노드 펄스 링(은은하게 살아있는 느낌) */
+.main1__gauge-dot.is-active .main1__gauge-mark::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, rgba(0, 174, 255, 0.6), rgba(59, 130, 246, 0.5) var(--p));
+  transform: translate(-50%, -50%) scale(1);
+  animation: gaugePulse 2.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+@keyframes gaugePulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: translate(-50%, -50%) scale(2.7);
+    opacity: 0;
+  }
+}
+/* 호버 시 라벨 툴팁(기본 숨김 — 메뉴명/숫자는 평소 노출 안 함) */
+.main1__gauge-tip {
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  padding: 4px 11px;
+  border-radius: 999px;
+  color: color-mix(in srgb, #eef2fa, #0e1726 var(--p));
+  background: color-mix(in srgb, rgba(20, 30, 48, 0.55), rgba(255, 255, 255, 0.78) var(--p));
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.main1__gauge-dot:hover .main1__gauge-tip,
+.main1__gauge-dot:focus-visible .main1__gauge-tip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+@media (max-width: 768px) {
+  .main1__gauge {
+    display: none;
+  }
+}
+
+/* ── 모바일/작은 태블릿(≤768): 풀스크린 슬라이드 메뉴(우→좌) ── */
+.main1__nav {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: flex-end;
+  visibility: hidden;
+  pointer-events: none;
+}
+.main1__nav.is-open {
+  visibility: visible;
+  pointer-events: auto;
+}
+/* 메뉴 열림: 배경(.main1) 스크롤 잠금.
+   ⚠️ overflow:hidden 은 쓰지 않는다 — 스크롤 컨테이너에 토글하면 브라우저가 scrollTop 을 리셋/복원하며
+   가짜 scroll 이벤트를 일으켜 --inv/is-page-2 가 잘못 계산되고 테마·콘텐츠가 어긋난 채 고착된다.
+   대신 scrollTop 을 건드리지 않고 '스크롤바만 숨기고', 실제 스크롤은 JS(휠 preventDefault·터치 menuOpenRef 가드)로 막는다. */
+.main1.is-nav-open {
+  scrollbar-width: none; /* Firefox */
+}
+.main1.is-nav-open::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none; /* WebKit/Chrome */
+}
+.main1__nav-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 11, 20, 0.45);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+.main1__nav.is-open .main1__nav-scrim {
+  opacity: 1;
+}
+.main1__nav-panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(28px, 9vw, 64px);
+  /* 테마(--p)에 따라 다크↔라이트 패널 — webkit 먼저/표준 마지막(빌드 미니파이 함정 §6-2a) */
+  background: color-mix(in srgb, rgba(11, 19, 30, 0.97), rgba(233, 239, 247, 0.98) var(--p));
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  backdrop-filter: blur(18px) saturate(1.1);
+  transform: translateX(100%);
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+  /* 스와이프-투-클로즈를 JS 가 완전 제어 — 네이티브 제스처/스크롤 차단(드래그 중 화면 흔들림 방지) */
+  touch-action: none;
+}
+.main1__nav.is-open .main1__nav-panel {
+  transform: translateX(0);
+}
+.main1__nav-close {
+  position: absolute;
+  top: clamp(16px, 5vw, 30px);
+  right: clamp(18px, 6vw, 34px);
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  color: color-mix(in srgb, #eef2fa, #0e1726 var(--p));
+  opacity: 0.8;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.main1__nav-close:hover {
+  opacity: 1;
+  transform: rotate(90deg);
+}
+.main1__nav-close svg {
+  width: 24px;
+  height: 24px;
+}
+.main1__nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 4vw, 24px);
+}
+.main1__nav-list li {
+  opacity: 0;
+  transform: translateX(40px);
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--k) * 0.06s);
+}
+.main1__nav.is-open .main1__nav-list li {
+  opacity: 1;
+  transform: translateX(0);
+  transition-delay: calc(0.18s + var(--k) * 0.08s);
+}
+.main1__nav-link {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 6px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: color-mix(in srgb, rgba(226, 232, 244, 0.62), rgba(20, 30, 48, 0.55) var(--p));
+  transition: color 0.3s ease, transform 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.main1__nav-num {
+  font-size: clamp(12px, 3vw, 15px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, #00aeff, #3b82f6 var(--p));
+  opacity: 0.85;
+}
+.main1__nav-label {
+  position: relative;
+  font-size: clamp(34px, 11vw, 58px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.main1__nav-link:hover {
+  color: color-mix(in srgb, #f4f7fc, #0b1320 var(--p));
+  transform: translateX(10px);
+}
+.main1__nav-link.is-active {
+  color: color-mix(in srgb, #ffffff, #0b1320 var(--p));
+}
+/* 활성(현재 페이지) 표시: 라벨 하단 악센트 바 */
+.main1__nav-link.is-active .main1__nav-label::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -7px;
+  height: 3px;
+  border-radius: 3px;
+  background: color-mix(in srgb, #00aeff, #3b82f6 var(--p));
+}
+/* PC/큰 태블릿에선 풀스크린 메뉴 비활성(게이지 사용) */
+@media (min-width: 769px) {
+  .main1__nav {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .main1__gauge::after,
+  .main1__gauge-mark,
+  .main1__nav-panel,
+  .main1__nav-scrim,
+  .main1__nav-list li {
+    transition: none;
+  }
+  .main1__gauge-dot.is-active .main1__gauge-mark::after {
+    animation: none;
+    opacity: 0;
+  }
+}
 
 /* ── 자기소개 명칭(히어로) — 뷰포트 고정 오버레이 ──
    1p: 중앙·큼·밝음. 색 전환(3/5) 전까지 inv=0 이라 중앙 고정(=fix). 전환되며 좌상단으로 모프.

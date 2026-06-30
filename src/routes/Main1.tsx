@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react'
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import './Main1.css'
@@ -204,9 +204,15 @@ export default function Main1() {
   const gateRef = useRef(false) // true = 2페이지 2/5 통과 → 새 클릭 버스트 정지
   const animatingRef = useRef(false) // 프로그램 스크롤(클릭 전환·스냅) 진행 중 → 스냅 재진입 방지
   const wheelStopRef = useRef<(() => void) | null>(null) // 휠 lerp 중단(버튼 클릭이 이어받을 때 충돌 방지)
+  const menuOpenRef = useRef(false) // 메뉴 열림 — 배경(.main1) 휠/터치 네비 무시용(스크롤 잠금)
+  const resyncRef = useRef<(() => void) | null>(null) // 메뉴 토글 후 스크롤 진행도(--inv·is-page-2) 강제 재동기화
+  const navPanelRef = useRef<HTMLDivElement>(null) // 풀스크린 메뉴 패널(스와이프-투-클로즈 transform 제어)
+  const navScrimRef = useRef<HTMLDivElement>(null) // 메뉴 스크림(드래그에 맞춰 opacity 페이드)
   const [titleIdx, setTitleIdx] = useState(0) // 다국어 타이틀 순환
   const [titleIn, setTitleIn] = useState(false) // 단어별 rise 트리거(언어 전환 시 false→true)
   const [subIdx, setSubIdx] = useState(0) // 메인페이지 서브타이틀 순환
+  const [page, setPage] = useState(0) // 현재 섹션(0=히어로/1=프로필/2=works) — 게이지·모바일 메뉴 활성 표시
+  const [menuOpen, setMenuOpen] = useState(false) // 모바일/작은 태블릿 풀스크린 메뉴 열림
 
   // 언어 전환 직후 다음 프레임에 단어별 rise 재생(transition 기반 — 키프레임-on-remount 불안정 회피)
   useEffect(() => {
@@ -279,6 +285,7 @@ export default function Main1() {
     let cur = 0
     let target = 0
     let raf = 0
+    let lastPage = -1 // 현재 섹션 인덱스 변화 시에만 setPage(불필요 리렌더 방지)
 
     function geo() {
       const vh = el!.clientHeight || 1
@@ -296,6 +303,13 @@ export default function Main1() {
       target = el!.scrollTop >= trig ? 1 : 0
       // 클릭 게이트: 색 전환(3/5)을 지나면 새 클릭 버스트 정지(복귀 시 자동 해제)
       gateRef.current = el!.scrollTop >= trig
+      // 현재 섹션(뷰포트 중앙 기준) → 게이지/모바일 메뉴 활성 표시. 변화 시에만 갱신.
+      const mid = el!.scrollTop + vh * 0.5
+      const pg = mid >= wTop ? 2 : mid >= rTop ? 1 : 0
+      if (pg !== lastPage) {
+        lastPage = pg
+        setPage(pg)
+      }
       // is-page-2: 이력(2P)이 '현재 페이지'인지. 1P/3P 로 떠나면 false → 다시 2P 도착 시 이력 재구성(리빌 재생).
       //  (is-settled[색상]은 2P·3P 모두 true 라 3→2 재구성을 못 잡음 → 별도 페이지 상태 필요)
       //  떠날 때(3P) 리셋은 이력이 거의 화면 밖일 때(wTop-0.15vh) → 깜빡임 최소화. 콘텐츠 reveal 은 is-settled 와 AND.
@@ -335,12 +349,18 @@ export default function Main1() {
     computeTarget()
     cur = target
     apply(cur)
+    // 외부(메뉴 토글 등)에서 강제 재동기화 — 리플로우로 어긋난 진행도 상태를 실제 scrollTop 기준으로 즉시 바로잡음.
+    resyncRef.current = () => {
+      computeTarget()
+      if (!raf) raf = requestAnimationFrame(tick)
+    }
     el.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
     return () => {
       el.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
       cancelAnimationFrame(raf)
+      resyncRef.current = null
     }
   }, [])
 
@@ -429,6 +449,10 @@ export default function Main1() {
     }
     wheelStopRef.current = stopWheel // 버튼(맨위로·안내)이 이어받을 때 휠 애니/락 해제
     function onWheel(e: WheelEvent) {
+      if (menuOpenRef.current) {
+        e.preventDefault() // 메뉴 열림: 배경 네이티브 스크롤/네비 완전 차단(overflow 토글 없이 잠금)
+        return
+      }
       if (Math.abs(e.deltaY) < 1) return
       e.preventDefault() // 항상 네이티브 스크롤 차단(관성 충돌·오버슈트 방지)
       tryUnlock() // 휠이 멎으면(150ms) 락 해제 → '한 제스처 = 1회 이동'
@@ -478,6 +502,7 @@ export default function Main1() {
     let tDragging = false
     let tMomRaf = 0
     function onTouchStart(e: TouchEvent) {
+      if (menuOpenRef.current) return // 메뉴 열림: 배경 드래그 네비 금지
       if (e.touches.length !== 1) return // 핀치 등은 무시
       cancelAnimationFrame(raf)
       cancelAnimationFrame(tMomRaf)
@@ -1119,6 +1144,112 @@ export default function Main1() {
     requestAnimationFrame(step)
   }
 
+  // 게이지/메뉴 → 지정 섹션(0=히어로/1=프로필/2=works)으로 부드럽게 이동.
+  //  단일 easeInOutCubic 스크롤이라 1→3·3→1 도 중간 섹션을 '거쳐서' 자연스럽게 흐른다('맨 위로' 버튼과 동일 메커니즘).
+  //  거리가 멀수록(여러 페이지) 시간이 늘어 과속 없이 매끄럽게 통과.
+  function scrollToSection(idx: number) {
+    const el = scrollRef.current
+    if (!el) return
+    wheelStopRef.current?.() // 휠 lerp/락 해제(충돌 방지)
+    const segs = ['.seg--hero', '.seg--resume', '.seg--work']
+    const target = el.querySelector<HTMLElement>(segs[idx])
+    const to = idx === 0 ? 0 : target ? target.offsetTop : 0
+    const start = el.scrollTop
+    const dist = to - start
+    if (Math.abs(dist) < 4) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.scrollTop = to
+      return
+    }
+    const dur = Math.min(1400, 520 + Math.abs(dist) * 0.5)
+    let t0 = 0
+    const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
+    animatingRef.current = true // 스냅/휠 컨트롤러가 끼어들지 않도록
+    const step = (now: number) => {
+      if (!t0) t0 = now
+      const p = Math.min(1, (now - t0) / dur)
+      el.scrollTop = Math.round(start + dist * ease(p))
+      if (p < 1) requestAnimationFrame(step)
+      else {
+        el.scrollTop = to
+        animatingRef.current = false
+      }
+    }
+    requestAnimationFrame(step)
+  }
+
+  // ── 모바일 메뉴 스와이프-투-클로즈 ──
+  //   메뉴는 우→좌로 열렸으므로, 반대 방향(좌→우) 드래그로 닫는다.
+  //   손가락을 1:1 로 따라오고(패널 translateX + 스크림 페이드), 놓을 때 임계(패널 폭 30%)·플릭이면 닫힘·미만이면 복귀.
+  const navDrag = useRef({ active: false, startX: 0, startY: 0, dx: 0, lastX: 0, lastT: 0, vx: 0, lock: '' as '' | 'x' | 'y' })
+  function onNavTouchStart(e: ReactTouchEvent) {
+    if (e.touches.length !== 1) return
+    const t = e.touches[0]
+    navDrag.current = { active: true, startX: t.clientX, startY: t.clientY, dx: 0, lastX: t.clientX, lastT: e.timeStamp, vx: 0, lock: '' }
+  }
+  function onNavTouchMove(e: ReactTouchEvent) {
+    const d = navDrag.current
+    if (!d.active || e.touches.length !== 1) return
+    const t = e.touches[0]
+    const dx = t.clientX - d.startX
+    const dy = t.clientY - d.startY
+    // 방향 락(첫 의미있는 이동으로 결정) — 세로 우세면 닫기 드래그 아님(무시)
+    if (!d.lock && Math.abs(dx) + Math.abs(dy) > 6) d.lock = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+    if (d.lock === 'y') return
+    const now = e.timeStamp
+    const dt = now - d.lastT
+    if (dt > 0) d.vx = (t.clientX - d.lastX) / dt
+    d.lastX = t.clientX
+    d.lastT = now
+    const panel = navPanelRef.current
+    const w = panel ? panel.offsetWidth : window.innerWidth
+    // 좌→우(dx>0)만 따라옴. 우→좌(dx<0)는 이미 열린 상태라 무시(0 고정).
+    const clamped = Math.max(0, dx)
+    d.dx = clamped
+    if (panel) {
+      panel.style.transition = 'none'
+      panel.style.transform = `translateX(${clamped}px)`
+    }
+    if (navScrimRef.current) navScrimRef.current.style.opacity = String(Math.max(0, 1 - clamped / w))
+  }
+  function onNavTouchEnd() {
+    const d = navDrag.current
+    if (!d.active) return
+    d.active = false
+    const panel = navPanelRef.current
+    const w = panel ? panel.offsetWidth : window.innerWidth
+    const shouldClose = d.dx > w * 0.3 || d.vx > 0.5 // 30% 이상 또는 우향 플릭 → 닫기
+    // 인라인 스타일 제거 → CSS(.is-open 유무)가 최종 위치 전환 애니메이션을 이어받음(부드러운 닫힘/복귀)
+    if (panel) {
+      panel.style.transition = ''
+      panel.style.transform = ''
+    }
+    if (navScrimRef.current) navScrimRef.current.style.opacity = ''
+    if (shouldClose) setMenuOpen(false)
+  }
+
+  // 모바일 메뉴: ESC 로 닫기 + 열렸을 때 데스크탑 폭으로 리사이즈되면 자동 닫힘(게이지로 전환).
+  useEffect(() => {
+    menuOpenRef.current = menuOpen // 배경 네비(휠/터치) 가드 동기화
+    // 메뉴 열림/닫힘에 따른 스크롤바 토글 리플로우로 진행도 상태(--inv·is-page-2)가 어긋날 수 있으므로
+    // 매 토글 후 실제 scrollTop 기준으로 재동기화(특히 닫힘 시 — 콘텐츠 리빌/테마 고착 방지).
+    // effect 는 className 커밋 후 실행 → computeTarget 의 offsetTop 읽기가 최신 레이아웃을 강제 동기화하므로 즉시 호출.
+    resyncRef.current?.()
+    if (!menuOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    const onResize = () => {
+      if (window.innerWidth > 768) setMenuOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [menuOpen])
+
   // 다국어 명칭 렌더(히어로·이력 섹션 타이틀 공용). 문장=줄, 단어별 스태거(--w), 이름은 크게.
   // firstLineOnly: 섹션 타이틀용 — 첫 문장(이름)만 → 길이가 길어 한 줄에서 넘치지 않게.
   const renderTitle = (idx: number, firstLineOnly = false) => {
@@ -1150,7 +1281,10 @@ export default function Main1() {
   return (
     // .main1 = 스크롤 컨테이너. 레이저는 뷰포트에 고정(블리드), 3D 구체는 히어로와 함께 위로 스크롤,
     // 그 위로 섹션(히어로 → 이력 → 개발/포트폴리오)이 흐른다.
-    <div className={IS_ANDROID ? 'main1 is-android' : 'main1'} ref={scrollRef}>
+    <div
+      className={`main1${IS_ANDROID ? ' is-android' : ''}${menuOpen ? ' is-nav-open' : ''}`}
+      ref={scrollRef}
+    >
       {/* ── 뷰포트 고정 배경 레이어(다크 그라데이션 + 레이저) ──
           스크롤이 2페이지 2/5 를 지나면 filter:invert(--inv)로 색반전 → 라이트 전환.
           2페이지 전체에 걸쳐 보이도록 fixed 로 깔고, 본문 섹션은 투명. */}
@@ -1171,11 +1305,102 @@ export default function Main1() {
             J·Young<span className="main1__logo-word2">&nbsp;portfolio</span>
           </span>
         </a>
-        <button className="main1__menu" type="button" aria-label="open menu">
+        {/* 햄버거 — 모바일/작은 태블릿(≤768)에서만 노출. 누르면 풀스크린 메뉴가 우→좌로 슬라이드 인. */}
+        <button
+          className="main1__menu"
+          type="button"
+          aria-label="메뉴 열기"
+          aria-expanded={menuOpen}
+          aria-controls="main1-nav"
+          onClick={() => setMenuOpen(true)}
+        >
           <span />
           <span />
         </button>
       </header>
+
+      {/* ── 데스크탑/큰 태블릿(≥769): 우측 중앙 세로 슬라이더 게이지 ──
+          현재 페이지 = 채워진 동그라미, 연결 = 선. 영역 클릭 시 현재 페이지 기준으로 자연스럽게 이동
+          (1→3·3→1 도 중간 섹션을 거쳐 흐름). 색은 --p 로 테마(다크↔라이트) 따라 가독성 유지. */}
+      <nav className="main1__gauge" aria-label="페이지 네비게이션" style={{ ['--seg' as string]: page }}>
+        {[
+          { i: 0, label: 'Main' },
+          { i: 1, label: 'Profile' },
+          { i: 2, label: 'works' },
+        ].map((s) => (
+          <button
+            key={s.i}
+            type="button"
+            className={`main1__gauge-dot${page === s.i ? ' is-active' : ''}`}
+            aria-label={`${s.label} 섹션으로 이동`}
+            aria-current={page === s.i ? 'true' : undefined}
+            onClick={() => scrollToSection(s.i)}
+          >
+            <span className="main1__gauge-mark" />
+            <span className="main1__gauge-tip">{s.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* ── 모바일/작은 태블릿(≤768): 풀스크린 슬라이드 메뉴(우→좌) ──
+          Main / Profile / works. 현재 페이지 활성 표시 + 호버 효과. 항목 클릭 → 해당 섹션 이동 후 닫힘. */}
+      <div
+        id="main1-nav"
+        className={`main1__nav${menuOpen ? ' is-open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="메뉴"
+        aria-hidden={!menuOpen}
+      >
+        <div className="main1__nav-scrim" ref={navScrimRef} onClick={() => setMenuOpen(false)} />
+        <div
+          className="main1__nav-panel"
+          ref={navPanelRef}
+          onTouchStart={onNavTouchStart}
+          onTouchMove={onNavTouchMove}
+          onTouchEnd={onNavTouchEnd}
+          onTouchCancel={onNavTouchEnd}
+        >
+          <button
+            type="button"
+            className="main1__nav-close"
+            aria-label="메뉴 닫기"
+            onClick={() => setMenuOpen(false)}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M6 6 L18 18 M18 6 L6 18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+          <ul className="main1__nav-list">
+            {[
+              { i: 0, label: 'Main' },
+              { i: 1, label: 'Profile' },
+              { i: 2, label: 'works' },
+            ].map((s, k) => (
+              <li key={s.i} style={{ ['--k' as string]: k }}>
+                <button
+                  type="button"
+                  className={`main1__nav-link${page === s.i ? ' is-active' : ''}`}
+                  aria-current={page === s.i ? 'true' : undefined}
+                  onClick={() => {
+                    setMenuOpen(false)
+                    scrollToSection(s.i)
+                  }}
+                >
+                  <span className="main1__nav-num">{`0${s.i + 1}`}</span>
+                  <span className="main1__nav-label">{s.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
 
       {/* 자기소개 명칭 — .main1 직속(섹션 밖). z-index 6 으로 글라스 패널 '위'에 그려져 블러되지 않음.
           --inv 로 중앙(1p)↔좌상단(2p) 이동·축소·색 전환. 색 전환(3/5) 전엔 중앙 고정(fix). */}
