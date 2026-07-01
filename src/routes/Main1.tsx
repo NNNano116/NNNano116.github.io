@@ -1,4 +1,5 @@
-import { Fragment, useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react'
+import { createPortal } from 'react-dom'
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import './Main1.css'
@@ -173,14 +174,800 @@ const RESUME_RIGHT: { h: string; entries: ResumeEntry[] }[] = [
   { h: '교육', entries: RESUME_TRAINING },
 ]
 
-// 개발 기술 그룹(포트폴리오 3페이지) — 카드 hover/focus 로 스택을 상세 탐색.
-// 히어로 서브타이틀과 동일 축으로 구성해 일관성 유지.
-const SKILL_GROUPS: { title: string; desc: string; stack: string[] }[] = [
-  { title: 'AI · Vibe Coding', desc: 'AI 보조 개발 워크플로', stack: ['Claude', 'Claude Code', 'Codex', 'Gemini', 'Stitch'] },
-  { title: 'Backend · Fullstack', desc: '서버 · API · DB 설계', stack: ['PHP', 'NestJS', 'MySQL'] },
-  { title: 'Web · App', desc: '프론트 · 크로스플랫폼', stack: ['React', 'React Native', 'Flutter'] },
-  { title: '기타 / 추후', desc: '추가 영역', stack: ['추후 채움'] },
+// 포트폴리오(3페이지 // works) — 세로 타임라인(선+점). 년도별 그룹 + 점(노드) 선택 시 펼쳐지는 인터랙션.
+//   · year : 년도 그룹 키(숫자, 내림차순 정렬) · period : 화면 표기 기간(범위 가능) · role : 담당(모노 대문자)
+//   · summary : 펼침 한 줄 소개 · overview : 소개 · features : 주요기능 · team : 개발 인원 · status : 서비스 현황
+//   · note : 성과/특이사항 하이라이트(선택) · links : 서비스 URL(선택) · tone : 커버 듀오톤 색조(a~e)
+//   · 실제 스크린샷은 .tl-item[data-tone] 의 --cover 를 import 한 url() 로 교체(절대경로 금지).
+//   · idx 는 커리어 순번(01=최초 이지몬 … 23=최신 윈오피스). 타임라인은 년도 내림차순이라 상단이 최신.
+type ProjectLink = { label: string; url: string }
+type Project = {
+  idx: string
+  name: string
+  client: string
+  year: number
+  period: string
+  role: string
+  summary: string
+  overview: string[]
+  features: string[]
+  stack: string[]
+  team: string
+  status: string
+  links?: ProjectLink[]
+  note?: string
+  tone: string
+  hasImage: boolean // 펼침 패널에 커버(이미지) 노출 여부. false 면 텍스트 전용 레이아웃.
+}
+const WINCARD_LINKS: ProjectLink[] = [
+  { label: 'wincard.kr', url: 'https://www.wincard.kr' },
+  { label: 'wincard.co.kr', url: 'https://www.wincard.co.kr' },
 ]
+const VWALLET_LINKS: ProjectLink[] = [{ label: 'vwallet.kr', url: 'https://www.vwallet.kr' }]
+const PROJECTS: Project[] = [
+  {
+    idx: '01', name: '이지몬 — NFT 수익공유 플랫폼', client: '이지몬', year: 2022, period: '2022.01 ~ 2022.04',
+    role: 'Backend · App', tone: 'a', hasImage: false,
+    summary: 'NFT 캐릭터 기반 수익공유 플랫폼 리뉴얼 및 신규 기능 개발.',
+    overview: [
+      '사내 운영 플랫폼 이지몬의 서비스 리뉴얼 및 신규 기능 추가.',
+      '당시 유행하던 NFT 기반 캐릭터 생성·부여 방식의 수익공유 프로젝트.',
+      '계약 오프라인 상점 소개 페이지 개발·광고 및 보상형 광고 리워드 지급.',
+    ],
+    features: [
+      'PG 빌링 결제 기반 멤버십 기간제 상품 설정 및 정기결제 연계.',
+      'PG 카드결제 기반 랜덤박스 뽑기 및 민팅 이벤트 상품 출시.',
+      '일/주/월 매출 기준 캐릭터 보유 수량별 전체회원 수익공유 수당 지급.',
+      '앱 배너·동영상 리워드 기반 보상형 광고 리워드 지급.',
+    ],
+    stack: ['PHP', 'jQuery', 'MariaDB', 'HTML'],
+    team: '기획 1 · 디자인 2 · 프론트 2 · 백엔드 1',
+    status: '서비스 종료',
+  },
+  {
+    idx: '02', name: '오디스트 · 예잇 — 웹 에이전시', client: '오디스트 · 예잇', year: 2022, period: '2022.04 ~ 2022.05',
+    role: 'Backend', tone: 'b', hasImage: false,
+    summary: '아티스트 소개 페이지와 SNS형 쇼핑몰 제작·유지보수.',
+    overview: [
+      '웹 에이전시 프로젝트 개발 및 서비스 유지보수.',
+      '오디스트: 소속 아티스트 소개·음반·굿즈 노출 및 공지·영상 광고 페이지 제작.',
+      '예잇: SNS 구성의 쇼핑몰 — 예술인 자체제작 상품 홍보·판매 및 공예품 제작 의뢰.',
+    ],
+    features: [
+      '아티스트 음반·굿즈 상품 노출 및 소속사 안내·공지·영상 광고 페이지.',
+      'SNS형 쇼핑몰 구성 및 예술 공예품 판매·제작 의뢰 기능.',
+    ],
+    stack: ['PHP', 'jQuery', 'MariaDB', 'HTML'],
+    team: '디자인 1 · 프론트 1 · 백엔드 1',
+    status: '유지보수 종료',
+  },
+  {
+    idx: '03', name: '윈카드 — B2B 복지카드 솔루션 (신규)', client: '윈카드', year: 2022, period: '2022.05 ~ 2022.07',
+    role: 'Backend · App', tone: 'c', hasImage: false,
+    summary: '신한카드 MOU 기반 B2B 복지카드·수당지급 솔루션 신규 개발.',
+    overview: [
+      '사내 B2B 복지카드 및 영업 수당지급 솔루션 신규 개발.',
+      '신한카드사 MOU 기반 법인카드 수당 지급 솔루션.',
+      '관리자 충전 요청으로 회원카드에 실재화 충전 → 온/오프라인 카드결제 지원.',
+    ],
+    features: [
+      '은행·PG 펌뱅킹 계좌 입출금 조회 및 입출금 노티 기반 서비스.',
+      '신한카드 상태·한도 조회 및 사용내역 제공, 한도 조정 기반 충전 자동화·실카드 잔액 연계.',
+      '카드 외 포인트 계좌이체 및 회원 간 포인트 전송·전환.',
+      '실명·본인인증 및 원천징수 정보 제공, 수수료 정산 스냅샷 계산·표시.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'HTML'],
+    team: '기획 1 · 디자인 2 · 프론트 1 · 백엔드 1',
+    status: '운영 중 · 영업 진행',
+    links: WINCARD_LINKS,
+  },
+  {
+    idx: '04', name: 'LM월드 · 조이널 — 네트워크 마케팅 마이오피스', client: 'LMWORLD · JOINALL', year: 2022, period: '2022.08 ~ 2022.10',
+    role: 'Backend', tone: 'd', hasImage: false,
+    summary: '네트워크 마케팅 수당 지급 체계 및 쇼핑몰 마이오피스 전산 개발.',
+    overview: [
+      'LMWORLD·JOINALL 2개 기업의 네트워크 마케팅 전용 마이오피스 전산 개발.',
+      '윈카드 서비스 이용 기업의 고객사 페이지 개발.',
+      '마케터 상품 판매·수당 지급을 위한 쇼핑몰 기능 및 수당 지급 체계.',
+    ],
+    features: [
+      '자사 판매 상품·판매가·시세 기반 PV 설계.',
+      '구매 상품 일일·누적 PV 기반 추천/후원 보너스·직급 체계 설계.',
+      '스테이킹 구조 수당 — 특정 상품 구매 시 일일 보너스 지급.',
+      '실시간 직급 체계 및 산하 PV 계산 기반 일/주/월 수당 지급.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'HTML'],
+    team: '디자인 2 · 프론트 1 · 백엔드 1',
+    status: 'JOINALL 운영 중 · LMWORLD 종료',
+    links: [{ label: 'joinall.company', url: 'https://www.joinall.company' }],
+  },
+  {
+    idx: '05', name: '나를미디어 — 네이버 플레이스 랭킹 추적', client: '나를미디어', year: 2022, period: '2022.10 ~ 2022.12',
+    role: 'Backend', tone: 'e', hasImage: false,
+    summary: '4만 가게의 네이버 플레이스 검색 순위를 크롤링·기록하는 광고효과 추적 전산.',
+    overview: [
+      '광고 서비스 등록 가게 리스트를 전산 등록·관리·운영하는 시스템.',
+      '네이버 플레이스 기반 광고 전/후 검색 랭킹 변화를 기록·관리해 광고효과 입증.',
+    ],
+    features: [
+      '총 4만 건 가게를 매일 1회 크롤링해 현황 수집.',
+      '가게별 추적 키워드 등록 → 네이버 플레이스 검색 노출 순위 크롤링·기록.',
+      '비공식 API 구조 분석·호출로 순위 집계 로직 고도화(웹드라이버 크롤러 → API 크롤러).',
+      '외부 추가 서버 API 방식 부분 탐색·집결 및 상태 단계화(대기/탐색중/완료) 무결성 예외 처리.',
+    ],
+    stack: ['PHP', 'Python', 'Vanilla JS', 'MariaDB'],
+    team: '디자인 1 · 프론트 1 · 백엔드 1',
+    status: '서비스 종료',
+    note: '크롤러 고도화 — 3일 최대 5천 건 → 일 2시간 이내 10만 회 키워드 탐색으로 처리량 대폭 개선.',
+  },
+  {
+    idx: '06', name: '조이널 — 입점몰 · SNS 플랫폼', client: 'JOINALL', year: 2023, period: '2023.01 ~ 2023.04',
+    role: 'Backend', tone: 'a', hasImage: false,
+    summary: 'JOINALL 리뉴얼 + 입점몰 조인샵 · 소상공인 조이로드 · SNS HOOK 개발·연동.',
+    overview: [
+      'JOINALL COMPANY 플랫폼 리뉴얼 및 수당 체계 추가.',
+      '입점몰 조인샵 / 소상공인 플랫폼 조이로드 / SNS 서비스 HOOK 개발·연동.',
+      '조인샵: 수당 포인트를 복합 사용하는 폐쇄형 몰인몰 쇼핑몰.',
+    ],
+    features: [
+      '관리자·판매자·회원 3뎁스 체계의 폐쇄형 몰인몰(입점몰), 장바구니·쿠폰 기능.',
+      'JOINALL COMPANY DB 연계 REST API 개발 — 회원·포인트 복합 결제 지원.',
+      'HOOK: 네이버·카카오·구글 소셜로그인 SNS 및 이미지/동영상 압축 플롯 설계.',
+      'Firebase 기반 풀링 UI 및 실시간 댓글/대화창/알림 서비스.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'Firebase'],
+    team: '디자인 1 · 프론트 2 · 백엔드 1',
+    status: '조인샵·조이로드 운영 중 · HOOK 만료',
+    links: [
+      { label: 'joinall.shop', url: 'https://joinall.shop' },
+      { label: 'joyroad.kr', url: 'https://joyroad.kr' },
+    ],
+  },
+  {
+    idx: '07', name: '윈카드 — 하나카드 · 글로벌 결제 (2차)', client: '윈카드', year: 2023, period: '2023.04 ~ 2023.08',
+    role: 'Backend', tone: 'b', hasImage: false,
+    summary: '하나카드 MOU 이관 및 MASTER/UNION 글로벌 해외 결제 지원 2차 개발.',
+    overview: [
+      'B2B 복지카드·수당지급 솔루션 기능 개선 및 2차 개발.',
+      '신한카드 외 하나카드 MOU 기반 법인카드 수당 지급 솔루션.',
+      'MASTER/UNION 카드 글로벌 해외 온/오프라인 결제 지원.',
+    ],
+    features: [
+      '하나카드 법인카드 전산 이관 및 시스템 구축, 거래내역·사용량 조회 연동.',
+      '하나카드 한도 설정·조회·상태 관리 등 카드 관리 기능 연동.',
+      '해외결제 및 해외 거래이력 관리.',
+      '국제문자 서비스·국가별 번역 및 국가 간 계좌이체 등 글로벌 사용 지원.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'HTML'],
+    team: '디자인 1 · 프론트 3 · 백엔드 1',
+    status: '운영 중 · 영업 진행',
+    links: WINCARD_LINKS,
+  },
+  {
+    idx: '08', name: '빅토리월렛 — 블록체인 코인 지갑 (신규)', client: '빅토리월렛', year: 2023, period: '2023.09 ~ 2023.12',
+    role: 'Backend', tone: 'c', hasImage: false,
+    summary: 'TRON 네트워크 HD 지갑 기반 코인 지갑 솔루션 신규 개발, 윈카드 연계.',
+    overview: [
+      '코인 네트워크 기반 블록체인 코인 지갑 솔루션 신규 개발.',
+      '윈카드 연계 프로젝트 — 실물 카드 외 코인 지갑 서비스 지원.',
+      '윈카드와 동일 구조로 운영하며 회원에게 지갑 서비스 제공.',
+    ],
+    features: [
+      '외부 코인 API 기반 TRON 단일 HD 지갑 및 파생주소 생성·부여.',
+      '웹훅 기반 주소별 입출금 트리거로 한도량 관리.',
+      '지갑 한도 조회 및 시세 기반 브릿지 서비스.',
+      '회원 간 P2P 전송 및 외부 지갑 코인 전송 기능.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'TRON'],
+    team: '디자인 2 · 프론트 2 · 백엔드 1',
+    status: '운영 중 · 영업 진행',
+    links: VWALLET_LINKS,
+  },
+  {
+    idx: '09', name: 'XTRUN — 글로벌 입점몰 쇼핑몰', client: 'XTRUN', year: 2024, period: '2024.01 ~ 2024.04',
+    role: 'Planning · Backend', tone: 'd', hasImage: false,
+    summary: '중국 쇼핑센터 XTURN의 한국 입점몰·수익공유 쇼핑몰 개발.',
+    overview: [
+      '중국 오프라인 쇼핑센터 XTURN의 한국 쇼핑몰 개발.',
+      '판매자 모집·상품 등록 판매 입점몰 및 영업 네트워크 수익 공유 서비스.',
+      '윈카드 서비스 이용 기업의 고객사 페이지 개발.',
+    ],
+    features: [
+      '자사 판매상품 마진 기반 PV·수익 체계 설계.',
+      '입점몰 판매자별 원가·마진율 설계 및 공유금액(PV) 설정.',
+      '누적 공유금액 기반 직급 체계 설정 및 공유 수익금 지급.',
+      '일/주/월 누적금액 기반 공유 수당 체계 설정·지급 관리.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'HTML'],
+    team: '기획·디자인 2 · 프론트 2 · 백엔드 1',
+    status: '서비스 종료',
+  },
+  {
+    idx: '10', name: '한울그룹 · 한울오피스 — 협동조합 온라인 장터', client: '한울그룹', year: 2024, period: '2024.05 ~ 2024.06',
+    role: 'Planning · Backend', tone: 'e', hasImage: false,
+    summary: '교회 공동체·지역 상인 협동조합형 온라인 장터, 티켓 기반 상생 보너스 설계.',
+    overview: [
+      '교회 공동체·지역 상인이 서로의 상품을 사고파는 협동조합형 온라인 장터 개발.',
+      '소개 페이지·마이오피스 전산·지역 쇼핑몰 3단계 구성.',
+      '오프라인 상점 구매 시 티켓 지급 → 순차 수익 공유 상생 보너스.',
+    ],
+    features: [
+      '티켓 순서 지정 및 만료(일정 인원 모집) 알고리즘 개발.',
+      '티켓 만료 시점 특정 순서 회원에게 상생 보너스 지급.',
+      '티켓 만료 대상 후순위 배치 알고리즘 개발·적용.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'HTML'],
+    team: '기획·디자인 2 · 프론트 1 · 백엔드 1',
+    status: '서비스 종료',
+  },
+  {
+    idx: '11', name: '빅토리월렛 — BSC · 커스텀 토큰 (2차)', client: '빅토리월렛', year: 2024, period: '2024.06 ~ 2024.07',
+    role: 'Backend', tone: 'a', hasImage: false,
+    summary: 'BSC 네트워크·커스텀 토큰 지원 및 P2P/P2C 거래소, TRON 수수료 최적화.',
+    overview: [
+      '코인 지갑 솔루션 기능 개선 및 2차 개발.',
+      '신규 BSC(Binance Smart Chain) 지원 및 P2P·P2C(마켓 메이커) 거래 추가.',
+      '기존 TRON 트랜잭션 수수료 최적화.',
+    ],
+    features: [
+      '단일 HD 지갑에 TRON 외 BSC 네트워크 지원·호환 개발.',
+      '메인/서브 토큰 외 TRC20·BEP20 파생 비상장 토큰 탐색·지원.',
+      '마더지갑 집금 자동화 및 잔액 트래커 개발.',
+      'TRON 리소스(Energy·Bandwidth) 최적화, 스테이킹·리소스 위임 개발.',
+      'P2P 코인 거래소 및 P2C 퀵거래·회사 시제 관리 서비스.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'TRON', 'BSC'],
+    team: '프론트 1 · 백엔드 1',
+    status: '운영 중 · 영업 진행',
+    links: VWALLET_LINKS,
+  },
+  {
+    idx: '12', name: '윈윈 — 글로벌 쇼핑센터 리뉴얼', client: '윈윈', year: 2024, period: '2024.08 ~ 2024.09',
+    role: 'Backend', tone: 'b', hasImage: false,
+    summary: 'XTURN 한국 쇼핑몰 리뉴얼, 국가별 결제·수당·번역 병합 운영.',
+    overview: [
+      'XTURN 한국 쇼핑몰 개발 리뉴얼 및 수당 체계 수정.',
+      '판매자 모집·상품 등록 판매 입점몰 및 영업 네트워크 수익 공유.',
+      '한중 외 다국가 쇼핑센터 병합 운영 및 국가별 수익 수당 체계 신설.',
+    ],
+    features: [
+      '한국 외 중국·대만·태국·일본 글로벌 번역 및 국가 서비스 지원.',
+      '원화 카드결제 외 중국 알리페이 및 국가별 카드 결제 수단 지원.',
+      '일본 거래소 USDT 시세 기반 코인 결제 지원.',
+      '글로벌 국가별 별도 수당 체계 및 공유 보너스, 실시간 번역.',
+    ],
+    stack: ['PHP', 'jQuery', 'MariaDB', 'HTML'],
+    team: '프론트 1 · 백엔드 1',
+    status: '서비스 종료',
+  },
+  {
+    idx: '13', name: '레오맥스 · M2M — 스테이킹 마이오피스', client: '레오맥스 · M2M', year: 2024, period: '2024.09 ~ 2024.10',
+    role: 'Backend', tone: 'c', hasImage: false,
+    summary: 'USDT 기반 예치상품 스테이킹형 마이오피스 전산 개발.',
+    overview: [
+      '네트워크 마케팅 기업 스테이킹형 마이오피스 전산 개발.',
+      '예치상품 판매·구매 수량 기록 관리 마이오피스 서비스.',
+    ],
+    features: [
+      '한국 외 중국·대만·필리핀 글로벌 회원 유치용 문자인증·번역 지원.',
+      '테더 USDT 기반 예치상품 시세 변동 상품 판매·결제 지원.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'USDT'],
+    team: '디자인 1 · 프론트 1 · 백엔드 1',
+    status: '서비스 종료',
+  },
+  {
+    idx: '14', name: '온리윈 · 힐링셀바이오 — 프로모션 마이오피스', client: 'ONLYWIN · 힐링셀바이오', year: 2024, period: '2024.10 ~ 2025.01',
+    role: 'Backend', tone: 'd', hasImage: false,
+    summary: '선착순·멤버십 특수 프로모션 수당 알고리즘 기반 마이오피스 신규 개발.',
+    overview: [
+      '네트워크 마케팅 조합 신규 플랫폼 ONLYWIN 마이오피스 전산 개발.',
+      '선착순 프로모션·멤버십 기간 프로모션 등 특수 프로모션 서비스.',
+      '윈카드 서비스 이용 기업의 고객사 마이오피스 개발.',
+    ],
+    features: [
+      '상품 구매 시 예치상품 스테이킹 및 기간제 멤버십 가입.',
+      '월정액 기간만료 상품 지급 및 빌링결제 멤버십 자동 결제.',
+      '멤버십 데일리 보너스 및 추천/후원 특수 프로모션 수당 알고리즘.',
+      '선착순 배치 학년·레벨링 프로모션 — 단계 달성 시 수익 공유.',
+      '직급·레벨·지사·지점 다중 체계별 주/월 수익 공유 서비스.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'HTML'],
+    team: '디자인 2 · 프론트 3 · 백엔드 2',
+    status: '서비스 종료',
+  },
+  {
+    idx: '15', name: 'NOAH · NOAH K BIO — 코인 기반 마이오피스', client: 'NOAH', year: 2025, period: '2025.01 ~ 2025.02',
+    role: 'Backend', tone: 'e', hasImage: false,
+    summary: 'ONLYWIN 신규 플랫폼 — 코인 네트워크 상품·스테이킹 수익률 강화.',
+    overview: [
+      'ONLYWIN 사 신규 플랫폼 NOAH K BIO 개발.',
+      '기존 체계에 코인 네트워크 기반 상품·공유 수익 서비스.',
+      '학년 등 선착순 프로모션 체계 및 스테이킹 수익률 강화.',
+    ],
+    features: [
+      '상품 구매 시 예치상품 스테이킹 및 기간제 멤버십 가입.',
+      '월정액 기간만료 상품 및 빌링결제 멤버십 자동 결제.',
+      '데일리 보너스 및 추천/후원 특수 프로모션 수당 알고리즘.',
+      '학년 프로모션 1·2·3 설계 — 조건 달성 시 수익 공유.',
+      '직급·레벨·지사·지점 다중 체계별 주/월 수익 공유.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'HTML'],
+    team: '디자인 1 · 프론트 2 · 백엔드 1',
+    status: '서비스 종료',
+  },
+  {
+    idx: '16', name: '윈카드 · 빅토리월렛 — 글로벌 이체 · 상점 (3차)', client: '윈카드 · 빅토리월렛', year: 2025, period: '2025.02 ~ 2025.06',
+    role: 'Backend', tone: 'a', hasImage: false,
+    summary: '중국 글로벌 이체·라이브 환전, 충전·결제 API 및 윈카드 상점 서비스.',
+    overview: [
+      'B2B 복지카드·수당지급 솔루션 기능 개선 및 3차 개발.',
+      '중국 알리페이·유니온페이 전송으로 국내외 글로벌 이체 지원.',
+      '충전·결제 API 연동으로 고객사 사이트 내 윈카드 서비스 제공.',
+      '소상공인 가게 솔루션 윈카드 상점 서비스 및 할인 바우처.',
+    ],
+    features: [
+      '중국 현지 알리페이·유니온페이 계좌 이체로 글로벌 이체 지원.',
+      '달러·위안화 실시간 환율 기반 양방향 라이브 환전 서비스.',
+      '카드 관리·충전 API 개발로 외부 고객사 윈카드 관리 지원.',
+      '카드 잔액·포인트·코인 결제 API로 제휴 사이트 윈카드 결제.',
+      '소상공인 상점 등록·상품 관리·홍보 플랫폼 윈카드 상점.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'HTML'],
+    team: '디자인 1 · 프론트 1 · 백엔드 1',
+    status: '운영 중 · 영업 진행',
+    links: WINCARD_LINKS,
+  },
+  {
+    idx: '17', name: 'HCBRS · NOAH · NOAH SKY — 글로벌 2차 개발', client: 'ONLYWIN', year: 2025, period: '2025.06 ~ 2025.08',
+    role: 'Backend', tone: 'b', hasImage: false,
+    summary: '힐링셀바이오·NOAH 리뉴얼 및 글로벌 확장, 승급형 멤버십 추가.',
+    overview: [
+      'ONLYWIN 사 플랫폼 힐링셀바이오·NOAH 리뉴얼 및 글로벌 2차 개발.',
+      '기간제 멤버십 외 일회성 승급형 멤버십 상품 추가.',
+      '수당 체계 지급 비율 업데이트 및 신규 프로모션 추가.',
+    ],
+    features: [
+      '한국 외 인도·두바이·중국·일본·태국 글로벌 서비스 확장.',
+      '언어 번역 및 USDT 코인 기반 해외 결제 도입.',
+      '국가별 글로벌 프로모션 체계 설계 및 기존 체계 분할 운영.',
+    ],
+    stack: ['PHP', 'Vanilla JS', 'MariaDB', 'USDT'],
+    team: '프론트 2 · 백엔드 1',
+    status: '서비스 종료',
+  },
+  {
+    idx: '18', name: '잇플 (EATPLE) — 노쇼 음식 특가 커머스', client: '잇플', year: 2025, period: '2025.09 ~ 2025.12',
+    role: 'Backend · App', tone: 'c', hasImage: false,
+    summary: '노쇼 음식을 특가 판매하는 위치기반 하이브리드 웹/앱 커머스, 기획~운영 담당.',
+    overview: [
+      '기획·개발·운영까지 담당한 하이브리드 웹/앱 프로젝트.',
+      '예약 후 판매되지 않은 노쇼 음식을 프로모션(할인) 전문 판매·관리.',
+      '소비자에겐 저렴한 상품, 판매자에겐 폐기 피해 최소화 효과.',
+    ],
+    features: [
+      '오픈마켓 입점몰 — 판매자(상점)·소비자(회원) 분리 서비스.',
+      '위치기반 서비스 — 현재 위치 기준 판매 상점·상품 노출, 지도·도착 예상시간.',
+      '실시간 주문 처리 및 웹/앱 하이브리드 풀링 실시간 알림·PUSH·라이브 UI.',
+      '하이브리드 웹/앱 래퍼 앱 개발·배포(소비자·판매자 각각).',
+    ],
+    stack: ['Laravel', 'Vue.js', 'TypeScript', 'Tailwind', 'React Native', 'FCM', 'Docker'],
+    team: '기획 2 · 디자인 1 · 프론트 1 · 백엔드 1',
+    status: '서비스 종료',
+    note: 'Claude Code 바이브 코딩 프로젝트.',
+  },
+  {
+    idx: '19', name: '빅토리월렛 — 지갑 API 마이그레이션', client: '빅토리월렛', year: 2026, period: '2026.01 ~ 2026.01',
+    role: 'Fullstack (단독)', tone: 'd', hasImage: false,
+    summary: '지갑 솔루션을 거래소 API로 마이그레이션, ETH·BASE 추가 — 연 4,900만원 절감.',
+    overview: [
+      '코인 지갑 솔루션 기능 개선 및 2차 개발(단독).',
+      'TRON·BSC 외 신규 ETH·BASE 네트워크 지원 추가.',
+      '기존 지갑 솔루션 → 해외 거래소 기반 API로 마이그레이션.',
+    ],
+    features: [
+      '국내 지갑 솔루션 → 블록체인 지갑 API(해외 거래소 API) 기반으로 마이그레이션.',
+      '파생지갑 생성·웹훅 구독·잔액 추적 트래커 구현.',
+      'ETH·BASE 네트워크 지원 및 수수료 자동 계산.',
+      '서비스 집금·잔액 관리 기능 자동화.',
+    ],
+    stack: ['PHP', 'TypeScript', 'Tailwind', 'Flutter', 'MariaDB', 'FCM'],
+    team: '풀스택 1 (단독)',
+    status: '운영 중 · 영업 진행',
+    links: VWALLET_LINKS,
+    note: '운영비 연 5,000만원 → 100만원, 연 약 4,900만원 절감. · Claude Code 바이브 코딩 프로젝트.',
+  },
+  {
+    idx: '20', name: '윈카드 · 빅토리월렛 — 보안 · Passkey 인증', client: '윈카드 · 빅토리월렛', year: 2026, period: '2026.01 ~ 2026.02',
+    role: 'Fullstack (단독)', tone: 'e', hasImage: false,
+    summary: 'Passkey 생체 2차 인증 도입 및 개인정보 암호화 보안 강화.',
+    overview: [
+      '윈카드·빅토리월렛 보안 업데이트 및 2차 인증수단 추가.',
+      '문자인증 외 생체인증 Passkey 인증 지원.',
+      '개인정보·민감정보 암호화 및 방화벽 인증 강화.',
+    ],
+    features: [
+      '구글 Passkey 서비스 모듈화 개발 — 생체 2차 인증 지원.',
+      '웹/앱 Passkey 설정 및 호환 마이그레이션 브릿지 코드.',
+      'QR 스캔·임시 패스워드 기반 외부기기 인증·인증키 생성.',
+      '개인정보/민감정보 개별 암호모듈 기반 미설정 항목 보안.',
+    ],
+    stack: ['PHP', 'TypeScript', 'Tailwind', 'React Native', 'Flutter', 'FCM'],
+    team: '풀스택 1 (단독)',
+    status: '운영 중 · 영업 진행',
+    links: WINCARD_LINKS,
+  },
+  {
+    idx: '21', name: '윈카드 — 충전 서비스 (4차)', client: '윈카드', year: 2026, period: '2026.02 ~ 2026.03',
+    role: 'Fullstack (단독)', tone: 'a', hasImage: false,
+    summary: '신용카드·휴대폰 소액결제 등 회원 직접 선불 충전 및 PG 선점 알고리즘.',
+    overview: [
+      'B2B 복지카드·수당지급 솔루션 기능 개선 및 4차 개발.',
+      '기존 관리자 충전 외 회원이 카드에 직접 선불 충전 불가 문제 해소.',
+      '신용카드·휴대폰 소액결제·무통장 입금 등 직접 선불 충전 지원.',
+    ],
+    features: [
+      '국내외 신용카드 수기결제·소액결제·알리페이·유니온페이·무통장 등 PG별 충전.',
+      '결제수단별 1~4개 PG 연동, 월/일 결제금액 순 PG 선점 알고리즘.',
+      '일/주/월 PG별 정산 모니터링 및 정산 수익금 집금 자동화.',
+      '2차 인증 기반 충전 보안 및 canvas 결제 약관 작성 시스템.',
+    ],
+    stack: ['PHP', 'TypeScript', 'Tailwind', 'React Native', 'Flutter', 'FCM'],
+    team: '풀스택 1 (단독)',
+    status: '운영 중 · 영업 진행',
+    links: WINCARD_LINKS,
+  },
+  {
+    idx: '22', name: '노온 (NOON) — AI 불만리뷰 SNS', client: '노온', year: 2026, period: '2026.03 ~ 2026.04',
+    role: 'Fullstack · App', tone: 'b', hasImage: false,
+    summary: 'AI 리뷰 도우미·OCR 검증을 지원하는 불만 공유 리뷰 SNS 신규 개발.',
+    overview: [
+      'AI 지원 불만 공유 리뷰 서비스 NOON 신규 개발.',
+      'SNS 형식으로 사업체·제품·서비스 불만사항을 공유하는 플랫폼.',
+      '리뷰 작성 시 AI 리뷰 도우미 서비스 지원.',
+    ],
+    features: [
+      '블로그 형식 리뷰 피드 공유형 SNS.',
+      '리뷰 등록 시 AI 검수로 부적절 리뷰 탐색(리뷰 도우미 AI).',
+      '영수증 첨부 OCR 인증 및 AI 이미지 분석 검증.',
+    ],
+    stack: ['NestJS', 'Vue.js', 'TypeScript', 'Tailwind', 'React Native', 'Gemini API', 'FCM'],
+    team: '디자인 1 · 프론트 1 · 풀스택 1',
+    status: '운영 중 · 스토어 앱 배포',
+    links: [{ label: 'noonx.kr', url: 'https://www.noonx.kr' }],
+    note: 'Claude Code 바이브 코딩 프로젝트.',
+  },
+  {
+    idx: '23', name: '윈오피스 (WINOFFICE) — 마이오피스 빌더', client: '윈오피스', year: 2026, period: '2026.04 ~ 2026.06',
+    role: 'Solo (기획·디자인·개발)', tone: 'c', hasImage: false,
+    summary: '누구나 마이오피스를 생성·운영하는 빌더 SaaS, 기획·디자인·개발 1인 완성.',
+    overview: [
+      '마이오피스 빌더 서비스 WINOFFICE 신규 개발.',
+      '높은 개발비·낮은 접근성 해소 — 누구나 쉽게 만드는 빌딩형 마이오피스.',
+      '카페24·아임웹처럼 전산 생성·수당 체계 선택으로 기업별 마이오피스 운영.',
+    ],
+    features: [
+      '빌더 구조 — 회원가입 후 마이오피스 생성·설정으로 자체 운영·관리.',
+      '생성 URL 공유로 만들어진 마이오피스 홍보·운영.',
+      '기존 전산·회원 이관 엑셀 대량 등록 및 AI 전산 이관 서비스.',
+      '쇼핑몰형 상품 등록·판매 및 판매 기반 수당 체계.',
+      '스토리지 마운트·미러링 — 이미지·영수증·약관·로그 보관.',
+      '수당 상세 설정·지급 비율 커스터마이즈, 요청 기반 수당 항목 확장.',
+      'OCR 거래내역 인증 및 AI 상황설정 챗봇 서비스.',
+    ],
+    stack: ['PHP', 'TypeScript', 'Tailwind', 'MariaDB', 'Gemini API', 'HTML'],
+    team: '1인 (기획·디자인·개발)',
+    status: '운영 중 · 영업 진행',
+    links: [
+      { label: 'winofficex.com', url: 'https://www.winofficex.com' },
+      { label: 'my.winofficex.com', url: 'https://my.winofficex.com' },
+    ],
+    note: 'Claude 기획 → Claude Design 프로토타입 → Claude Code 개발.',
+  },
+]
+
+// 포트폴리오 타임라인(// works) — 세로 스파인(선) + 노드(점). 년도별 그룹(큰 라벨·노드) + 점 선택 시 펼쳐짐.
+//  · 기본 첫 프로젝트 열림. 노드/바 클릭 = 선택/토글. 패널은 grid-template-rows 0fr→1fr 로 부드럽게 전개.
+//  · 리빌은 React state(shown: idx Set)로 소유 — 전역 .reveal IO 처럼 DOM 에 직접 클래스를 넣으면
+//    토글 리렌더 때 React 가 className 을 덮어써 지워진다(→ 항목이 사라짐). 그래서 자체 IO + state 로 관리.
+function WorksTimeline({ page, menuOpen }: { page: number; menuOpen: boolean }) {
+  // 최신순(내림차순) — idx 는 커리어 오름차순(01=최초)이라 가장 큰 idx 가 최신. 타임라인 상단이 최신.
+  const firstIdx = PROJECTS[PROJECTS.length - 1]?.idx ?? '' // 자동 펼침 대상 = 최신(상단 첫 항목)
+  const years = Array.from(new Set(PROJECTS.map((p) => p.year))).sort((a, b) => b - a) // 년도 내림차순
+  const [active, setActive] = useState<string>('') // 열린 프로젝트(오버레이 복원 시 유지)
+  const [entered, setEntered] = useState(false) // 진입 재생 트리거(스파인→년도·항목 순차 등장)
+  const [modal, setModal] = useState<string | null>(null) // View → 상세 모달(프로젝트 idx)
+  const interacted = useRef(false) // 사용자가 먼저 항목을 조작하면 자동 전개 취소
+  const openTimer = useRef(0)
+  const revealTimer = useRef(0)
+
+  // ── 진입/재생 오케스트레이션 — entered 를 껐다(숨김) 잠시 뒤 켜서 CSS 스태거를 재시작(2P 처럼 도착마다 재생).
+  //   · fresh=true(스크롤 도착): active 리셋 → 스태거 종료 시 첫 프로젝트 자동 전개.
+  //   · fresh=false(메뉴/모달 해제): 이전에 열려있던 프로젝트(active) 유지하며 재생(복원).
+  //   ⚠️ rAF 대신 setTimeout 사용 — rAF 는 idle/백그라운드에서 멈출 수 있어 재생이 걸릴 수 있음(견고성).
+  const replay = useCallback(
+    (fresh: boolean) => {
+      clearTimeout(openTimer.current)
+      clearTimeout(revealTimer.current)
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setEntered(true)
+        if (fresh) {
+          interacted.current = false
+          setActive(firstIdx)
+        }
+        return
+      }
+      setEntered(false) // 숨김으로 리셋(이 상태가 페인트된 뒤 다시 켜야 트랜지션이 재생됨)
+      if (fresh) {
+        interacted.current = false
+        setActive('')
+      }
+      revealTimer.current = window.setTimeout(() => {
+        setEntered(true)
+        if (fresh) {
+          // 자동 펼침 = 최신(최상단) 항목. seq 가 작아 일찍 등장하므로 총 개수와 무관한 고정 지연으로 빠르게 연다.
+          openTimer.current = window.setTimeout(() => {
+            if (!interacted.current) setActive(firstIdx)
+          }, 720)
+        }
+      }, 40)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [firstIdx],
+  )
+
+  const onPage = page === 2 // works 가 현재 섹션(2P 의 is-page-2 와 동일 개념)
+  // ⚠️ 가림 판정에는 '메뉴'만 포함. 모달(View)은 타임라인을 전체(모바일)·백드롭 블러(PC)로 완전히 덮으므로
+  //    뒤의 타임라인은 entered 그대로 두고 재생하지 않는다 → 모달을 닫아도 스태거가 다시 돌지 않음(깜빡임 제거).
+  const covered = menuOpen // 메뉴가 가림(모달은 제외)
+  const visible = onPage && !covered
+  const prevVisible = useRef(false)
+  const prevOnPage = useRef(false)
+  const nextFresh = useRef(true) // 다음 재생이 fresh(스크롤 도착)인지 restore(오버레이 해제)인지
+
+  useEffect(() => {
+    if (!onPage && prevOnPage.current) nextFresh.current = true // 스크롤로 이탈 → 다음은 fresh
+    prevOnPage.current = onPage
+  }, [onPage])
+  useEffect(() => {
+    if (covered && onPage) nextFresh.current = false // 메뉴로 가려짐 → 다음(메뉴 닫힘)은 복원
+  }, [covered, onPage])
+  useEffect(() => {
+    const was = prevVisible.current
+    prevVisible.current = visible
+    if (visible && !was) replay(nextFresh.current)
+    else if (!visible && was) setEntered(false)
+  }, [visible, replay])
+  useEffect(
+    () => () => {
+      clearTimeout(openTimer.current)
+      clearTimeout(revealTimer.current)
+    },
+    [],
+  )
+
+  const onSelect = (idx: string, open: boolean) => {
+    interacted.current = true // 자동 전개보다 사용자 선택 우선
+    setActive(open ? '' : idx)
+  }
+
+  let seq = 0 // 등장 스태거 순번(스파인 이후 년도·항목 순서대로)
+  return (
+    <>
+      <div className={`tl${entered ? ' is-entered' : ''}`}>
+        <span className="tl__line" aria-hidden="true" />
+        {years.map((yr) => {
+          // 년도 내 최신 달 먼저(내림차순) — idx 내림차순 정렬(월 순서와 일치).
+          const items = PROJECTS.filter((p) => p.year === yr).sort((a, b) => Number(b.idx) - Number(a.idx))
+          const headSeq = ++seq
+          return (
+            <section className="tl-year" key={yr}>
+              <div className="tl-year__head" style={{ ['--seq' as string]: headSeq }}>
+                <span className="tl-year__node" aria-hidden="true" />
+                <span className="tl-year__label">{yr}</span>
+                <span className="tl-year__meta">
+                  {items.length} project{items.length > 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="tl-year__items">
+                {items.map((p) => {
+                  const open = active === p.idx
+                  const itemSeq = ++seq
+                  return (
+                    <div
+                      className={`tl-item${open ? ' is-open' : ''}${p.hasImage ? '' : ' is-noimg'}`}
+                      key={p.idx}
+                      data-row={p.idx}
+                      data-tone={p.tone}
+                      style={{ ['--seq' as string]: itemSeq }}
+                    >
+                      <button
+                        type="button"
+                        className="tl-item__bar"
+                        aria-expanded={open}
+                        onClick={() => onSelect(p.idx, open)}
+                      >
+                        <span className="tl-item__dot" aria-hidden="true" />
+                        <span className="tl-item__idx">{p.idx}</span>
+                        <span className="tl-item__title">{p.name}</span>
+                        <span className="tl-item__chev" aria-hidden="true" />
+                      </button>
+                      <div className="tl-item__panel">
+                        <div className="tl-item__clip">
+                          <div className="tl-item__content">
+                            {p.hasImage ? (
+                              <div className="tl-item__cover" aria-hidden="true">
+                                <div className="tl-item__art" />
+                                <span className="tl-item__num">{p.idx}</span>
+                              </div>
+                            ) : null}
+                            <div className="tl-item__detail">
+                              {/* 메타 — 기간 · 담당 · 고객사(초기 노출 정보 보강) */}
+                              <div className="tl-item__meta">
+                                <span className="tl-item__meta-period">{p.period}</span>
+                                <span className="tl-item__meta-dot" aria-hidden="true" />
+                                <span className="tl-item__meta-role">{p.role}</span>
+                                <span className="tl-item__meta-dot" aria-hidden="true" />
+                                <span className="tl-item__meta-client">{p.client}</span>
+                              </div>
+                              <p className="tl-item__desc">{p.summary}</p>
+                              {/* 핵심 기능 미리보기(상위 3개) — 자세히는 View 모달 */}
+                              <ul className="tl-item__points">
+                                {p.features.slice(0, 3).map((f) => (
+                                  <li key={f}>{f}</li>
+                                ))}
+                              </ul>
+                              <div className="tl-item__tags">
+                                {p.stack.map((s, ci) => (
+                                  <span className="tl-chip" key={s} style={{ ['--ci' as string]: ci }}>
+                                    {s}
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="tl-item__foot">
+                                <span className="tl-item__status">{p.status}</span>
+                                <button
+                                  type="button"
+                                  className="tl-item__view"
+                                  onClick={() => setModal(p.idx)}
+                                >
+                                  View&nbsp;→
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )
+        })}
+      </div>
+      {modal
+        ? createPortal(
+            <WorkModal
+              project={PROJECTS.find((p) => p.idx === modal) as Project}
+              onClose={() => setModal(null)}
+            />,
+            document.body,
+          )
+        : null}
+    </>
+  )
+}
+
+// 상세 모달 — View 클릭 시. PC=중앙 다이얼로그 / 태블릿·모바일=전체 화면 덮기(메뉴처럼).
+//  · 백드롭/ESC 로 닫힘. document.body 로 portal → .main1 변형·스크롤과 독립(전체 뷰포트 고정).
+function WorkModal({ project, onClose }: { project: Project; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  return (
+    <div className="wm" role="dialog" aria-modal="true" aria-label={project.name} onClick={onClose}>
+      <div
+        className="wm__panel"
+        data-tone={project.tone}
+        data-noimg={project.hasImage ? undefined : ''}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button type="button" className="wm__close" onClick={onClose} aria-label="닫기">
+          <span />
+          <span />
+        </button>
+        {project.hasImage ? (
+          // 커버 포스터 — 듀오톤 아트(느린 켄번스 줌) + 하단 스크림 + 글래스 role 태그 + 대형 인덱스.
+          <div className="wm__cover" aria-hidden="true">
+            <div className="wm__art" />
+            <div className="wm__cover-scrim" />
+            <span className="wm__cover-tag">{project.role}</span>
+            <span className="wm__num">{project.idx}</span>
+          </div>
+        ) : null}
+        {/* 본문 — 직계 자식이 순차(스태거) 라이즈. head → overview → features → stack → details 순. */}
+        <div className="wm__body">
+          <div className="wm__head">
+            <span className="wm__kicker" aria-hidden="true" />
+            <p className="wm__client">{project.client}</p>
+            <h3 className="wm__title">{project.name}</h3>
+            <p className="wm__period">
+              <span className="wm__period-dot" aria-hidden="true" />
+              {project.period}
+            </p>
+          </div>
+          {project.note ? <p className="wm__note">{project.note}</p> : null}
+          <section className="wm__section">
+            <h4 className="wm__h">Overview</h4>
+            <ul className="wm__list">
+              {project.overview.map((o) => (
+                <li key={o}>{o}</li>
+              ))}
+            </ul>
+          </section>
+          <section className="wm__section">
+            <h4 className="wm__h">Key Features</h4>
+            <ul className="wm__list wm__list--feat">
+              {project.features.map((f) => (
+                <li key={f}>{f}</li>
+              ))}
+            </ul>
+          </section>
+          <section className="wm__section">
+            <h4 className="wm__h">Tech Stack</h4>
+            <div className="wm__tags">
+              {project.stack.map((s, ci) => (
+                <span className="wm__chip" key={s} style={{ ['--ci' as string]: ci }}>
+                  {s}
+                </span>
+              ))}
+            </div>
+          </section>
+          <section className="wm__section">
+            <h4 className="wm__h">Details</h4>
+            <dl className="wm__rows">
+              <div className="wm__row">
+                <dt className="wm__row-k">담당</dt>
+                <dd className="wm__row-v">{project.role}</dd>
+              </div>
+              <div className="wm__row">
+                <dt className="wm__row-k">개발 인원</dt>
+                <dd className="wm__row-v">{project.team}</dd>
+              </div>
+              <div className="wm__row">
+                <dt className="wm__row-k">서비스 현황</dt>
+                <dd className="wm__row-v">{project.status}</dd>
+              </div>
+              {project.links && project.links.length ? (
+                <div className="wm__row">
+                  <dt className="wm__row-k">링크</dt>
+                  <dd className="wm__row-v wm__links">
+                    {project.links.map((l) => (
+                      <a
+                        key={l.url}
+                        className="wm__link"
+                        href={l.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {l.label}&nbsp;↗
+                      </a>
+                    ))}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          </section>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // 점 p 에서 선분 ab 까지의 최단거리(커서 근접 판정용).
 function distToSeg(px: number, py: number, ax: number, ay: number, bx: number, by: number) {
@@ -388,6 +1175,38 @@ export default function Main1() {
     return () => io.disconnect()
   }, [])
 
+  // ── 벤토 썸네일 패럴럭스 — works 섹션이 뷰포트를 지나는 진행도를 --par(≈-1.2..1.2)로 노출.
+  //    스크롤 컨테이너(scrollRef)에 passive 리스너만 추가(읽기 전용) → 휠-락(wheel preventDefault) 모델 불간섭.
+  //    카드별 --depth(px)와 곱해 .bento-card__img 가 천천히 드리프트. reduced-motion 이면 비활성(정지). ──
+  useEffect(() => {
+    const root = scrollRef.current
+    if (!root) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const work = root.querySelector('.seg--work') as HTMLElement | null
+    if (!work) return
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const vh = root.clientHeight || 1
+      const r = work.getBoundingClientRect()
+      const rr = root.getBoundingClientRect()
+      const center = r.top - rr.top + r.height / 2 // 컨테이너 뷰포트 기준 섹션 중심
+      const par = Math.max(-1.2, Math.min(1.2, (center - vh / 2) / (vh * 0.5)))
+      work.style.setProperty('--par', par.toFixed(3))
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+    update()
+    root.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      root.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      cancelAnimationFrame(raf)
+    }
+  }, [])
+
   // ── 섹션 캡 네비게이션 — 데스크탑(wheel) + 모바일(touch/drag) 동일 경험.
   //    한 번의 제스처로 '한 섹션'만 이동(1P→2P 가 최대). 섹션이 뷰포트보다 크면(긴 이력) 내부는 자유 스크롤,
   //    경계에서 더 가면 다음/이전 섹션으로 전환. 터치는 경계에서 드래그한 만큼 페이지가 따라오다
@@ -398,6 +1217,7 @@ export default function Main1() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     let animating = false
     let raf = 0
+    let animSafety = 0 // 워치독 타이머 — rAF 스톨 시 강제 완료(스크롤 영구 정지 방지)
     const tops = () =>
       ['.seg--hero', '.seg--resume', '.seg--work']
         .map((s) => el.querySelector<HTMLElement>(s))
@@ -405,9 +1225,20 @@ export default function Main1() {
         .map((s) => ({ top: s.offsetTop, bottom: s.offsetTop + s.offsetHeight }))
     function animateTo(to: number) {
       cancelAnimationFrame(raf)
+      clearTimeout(animSafety)
       const from = el!.scrollTop
       const dist = to - from
-      if (Math.abs(dist) < 2) return
+      // 플래그를 확실히 내리는 공용 종료 처리(early-return·정상완료·워치독 모두 여기로).
+      const done = () => {
+        clearTimeout(animSafety)
+        cancelAnimationFrame(raf)
+        animating = false
+        animatingRef.current = false
+      }
+      if (Math.abs(dist) < 2) {
+        done() // 이동 없음 — 플래그 즉시 해제(락 고착 방지)
+        return
+      }
       animating = true
       animatingRef.current = true
       let t0 = 0
@@ -420,11 +1251,17 @@ export default function Main1() {
         if (p < 1) raf = requestAnimationFrame(step)
         else {
           el!.scrollTop = to
-          animating = false
-          animatingRef.current = false
+          done()
         }
       }
       raf = requestAnimationFrame(step)
+      // ⚠️ 워치독: 모달의 전체화면 backdrop-filter(blur) 가 캔버스 위에서 rAF 를 스톨시키면
+      //    animateTo 가 완료되지 못해 animating/락 이 영구 고착 → 이후 모든 휠이 무시되어 '스크롤이 죽는' 버그.
+      //    dur+400ms 안에 rAF 가 끝나지 못하면 강제로 목표까지 이동·플래그 해제(자가 치유).
+      animSafety = window.setTimeout(() => {
+        el!.scrollTop = to
+        done()
+      }, dur + 400)
     }
     // ── 데스크탑 휠: '한 제스처 = 최대 1섹션' 락 모델(부드러운 animateTo). ⭐
     //    ❌ 과거: 섹션 내부 네이티브 스크롤의 관성이 경계 animateTo 와 충돌(2→3 튕김 / 3→2 미완료) +
@@ -443,6 +1280,7 @@ export default function Main1() {
     }
     function stopWheel() {
       cancelAnimationFrame(raf)
+      clearTimeout(animSafety)
       animating = false
       locked = false
       clearTimeout(idleTimer)
@@ -589,6 +1427,7 @@ export default function Main1() {
       el.removeEventListener('touchend', onTouchEnd)
       el.removeEventListener('touchcancel', onTouchEnd)
       clearTimeout(idleTimer)
+      clearTimeout(animSafety)
       cancelAnimationFrame(raf)
       cancelAnimationFrame(tMomRaf)
       wheelStopRef.current = null
@@ -1575,39 +2414,18 @@ export default function Main1() {
 
       {/* ───────────── 3. 개발 · 포트폴리오(라이트) ───────────── */}
       <section className="seg seg--work" id="work">
-        {/* 인플로우 섹션 타이틀(// works 개발&포트폴리오) — 섹션과 함께 자연 스크롤. */}
-        <div className="seg__inner">
+        {/* 인플로우 섹션 타이틀(// works 프로젝트) — 섹션과 함께 자연 스크롤.
+            ⚠️ 배경/패널 영역은 2P(resume)와 '동일 구조' 사용 — inner 에 seg__inner--resume(공유 폭/패널)를
+            그대로 부여해 2P 의 확정된 프로스트 패널·폭을 그대로 상속(3P 전용 배경 코드 없음). */}
+        <div className="seg__inner seg__inner--resume">
           <div className="seg__head">
             <p className="seg__eyebrow">// works</p>
-            <h2 className="seg__title">개발 &amp; 포트폴리오</h2>
+            <h2 className="seg__title">프로젝트</h2>
           </div>
           <div className="seg__fade">
-          <div className="work-grid">
-            {SKILL_GROUPS.map((g, gi) => (
-              <article
-                className="work-card reveal"
-                key={g.title}
-                tabIndex={0}
-                style={{ ['--i' as string]: gi }}
-              >
-                <span className="work-card__tag">stack</span>
-                <h3 className="work-card__h">{g.title}</h3>
-                <p className="work-card__desc">{g.desc}</p>
-                <div className="work-card__detail">
-                  {g.stack.map((s, i) => (
-                    <span
-                      className="chip"
-                      key={s}
-                      style={{ ['--i' as string]: i }}
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
-                <span className="work-card__more">자세히&nbsp;→</span>
-              </article>
-            ))}
-          </div>
+          {/* 타임라인 — 세로 스파인(선)+노드(점), 년도별 그룹. 점 선택 시 커버·상세가 펼쳐짐.
+              page/menuOpen 전달 → 도착·오버레이 해제마다 진입 재생(2P 처럼). */}
+          <WorksTimeline page={page} menuOpen={menuOpen} />
           </div>
         </div>
       </section>

@@ -4,7 +4,8 @@
 > 스택/버전은 [`mcp-setup.md` D-2](./mcp-setup.md), 초기화·설정 절차는 [`project-init.md`](./project-init.md),
 > 배포 함정은 [`deploy.md`](./deploy.md), 운영 제약은 [`CLAUDE.md §1`](../CLAUDE.md)을 **참조**(값 복제 금지).
 
-> 🟡 **상태: 계획 확정 · 구현 보류** (2026-06-22). 타 에이전트의 설정(base·라우터·deploy.yml) 적용 완료 후 착수.
+> 🟢 **상태: `/` (Main1) 단일 라우트 우선 구현 진행 중** (업데이트 2026-07-01). 멀티라우트(§2 하단 /about·/projects·/contact)는 **계획 유지·미착수** — 현재는 Main1 한 라우트에 히어로(1P)·자기소개(2P)·**포트폴리오(3P // works)** 를 인플로우로 담음.
+> ✅ **3P `프로젝트`(// works) 포트폴리오 섹션 구현 완료**(2026-07-01): 세로 타임라인(최신순·접힌 바=이름만/펼침 정보 보강) + 데이터리치 상세 모달 + **`PROJECTS` 23개 실경력 반영**. 남은 것은 커버 실이미지뿐. → [`main1-works.md`](./main1-works.md).
 > 진행 중 변경이 생기면 **이 문서를 먼저 갱신**한 뒤 코드/상위 문서를 맞춘다(§4-4 SSOT).
 
 ---
@@ -77,5 +78,6 @@ src/
 
 - 스택·버전: [`mcp-setup.md`](./mcp-setup.md) (허브 **D**) · 초기화 런북: [`project-init.md`](./project-init.md)
 - 개발(A): [`dev-stack.md`](./dev-stack.md) · 배포(B): [`deploy.md`](./deploy.md) · Git/배포현황(C): [`git-connection.md`](./git-connection.md)
+- Main1 구현 정본: 히어로 [`main1-hero.md`](./main1-hero.md) · 스크롤/헤더 [`main1-scroll-interactions.md`](./main1-scroll-interactions.md) · **3P works [`main1-works.md`](./main1-works.md)**
 - 운영 제약: [`CLAUDE.md §1`](../CLAUDE.md)
 - 소스(생성 예정): `src/main.tsx`·`src/routes/**`·`src/components/**`

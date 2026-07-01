@@ -114,6 +114,13 @@
   - **재동기화 안전장치**: 스크롤바 토글 리플로우가 섹션 높이(`wTop`)를 흔들어 `is-page-2`(리빌 게이트)가 어긋날 수 있어, 메뉴 토글마다 `resyncRef`(스크롤 effect 가 노출)로 **실제 `scrollTop` 기준 `computeTarget` 강제 재실행** → 콘텐츠 리빌/테마 고착 방지(닫힘 후 상태가 항상 실제 위치와 일치).
 - 브레이크포인트 **768/769** 는 기존 이력 2열↔1열(§8)과 동일 경계.
 
+### 5-5. `animateTo` 워치독 — 모달 blur 가 휠 스크롤을 '죽이던' 버그 ⚠️ (2026-07-01)
+> ❌ 증상: 3P `View` 상세 **모달을 한 번 열었다 닫으면** 이후 **모든 휠이 무시**되어 섹션 이동이 완전히 멈춤('스크롤이 죽음').
+> ❌ 원인: 모달의 **전체화면 `backdrop-filter: blur`** 가 캔버스(three.js) 위에서 `requestAnimationFrame` 을 스톨 → `animateTo` 의 `step` 이 완료되지 못해 `animating`/`animatingRef`(휠 락)가 **영구 고착**.
+- ✅ **워치독 타이머 `animSafety`**: `animateTo` 시작 시 `dur+400ms` 예약 → 그 안에 rAF 가 못 끝내면 **강제로 `scrollTop=to` + 플래그 해제**(자가 치유).
+- **공용 종료 `done()`**: early-return(`|dist|<2`)·정상완료·워치독이 **모두 `done()` 으로 수렴** → 어느 경로로 빠져도 `animating/animatingRef` 락이 확실히 풀림. `stopWheel`·언마운트 클린업에서도 `clearTimeout(animSafety)`.
+- 상세(모달·타임라인): [`main1-works.md §5`](./main1-works.md).
+
 ## 6. 2P 디자인 이력서 + 글라스 + 리빌 ⭐
 
 ### 6-1. 디자인 이력서 (2단 / 세로 1단) — 확정
@@ -156,8 +163,8 @@
   `transition-delay: calc(0.2s + var(--i)·0.11s)` → **명칭이 뜬 직후** 자기소개→연락처→스킬→경력… 순서로 **'적히듯' 구성**.
   - **`is-page-2`** = `scrollTop` 이 `[rTop·0.5, wTop − vh·0.15)` 일 때(JS). `is-settled`(색상)는 2P·3P 모두 true 라 3→2 재구성을 못 잡으므로 **별도 페이지 상태**가 필요.
     → **1P→2P / 3P→2P 어느 방향이든** 2P 도착 시 다시 구성. transition 은 '보임' 상태에만 둬 떠날 땐 즉시 숨김(staggered fade-out·깜빡임 방지). 자기소개는 인사말(`-lead`) + 본문(`-body`, 의미 단위 `.resume__unit`)로 구성.
-- **포트폴리오 카드(3p)**: `.reveal` + `IntersectionObserver`(`Main1.tsx`) → **뷰포트 진입 시** `.is-inview` 부여, 천천히 떠오르며 등장(`--i` 스태거). 카드 hover 리프트는 `.is-inview` 후에만(리빌 transform 충돌 방지).
-  - IO root = `.main1`, `rootMargin: 0 0 -12% 0`, 한 번 등장 후 `unobserve`. `reduced-motion` 이면 즉시 표시.
+- **포트폴리오(3p)**: 구 스킬 카드(`.work-grid`/`.work-card` + 전역 `.reveal` IO)는 **세로 타임라인으로 교체**(2026-07-01). 타임라인은 전역 `.reveal` IO 를 쓰지 않고 **자체 state(`entered`)** 로 등장을 소유(토글 리렌더 때 React 가 IO 클래스를 덮어써 지우는 문제 회피) — 도착·오버레이 해제마다 `--seq` 스태거 재생. → [`main1-works.md §3`](./main1-works.md).
+  - 전역 `.reveal` IO(`Main1.tsx`, root=`.main1`·`rootMargin:0 0 -12% 0`·`unobserve`·`reduced-motion` 즉시)는 다른 리빌 요소용으로 유지.
 
 ## 7. 마우스 패럴럭스 + 3D 구체 인터랙션
 
