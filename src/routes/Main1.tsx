@@ -1565,11 +1565,19 @@ export default function Main1() {
     const canvas = canvasRef.current
     if (!canvas) return
 
+    // ⚡ 무거운 three.js 초기화(PMREM 환경맵·구체 생성·WebGL 컨텍스트)를 첫 페인트 뒤로 미룬다.
+    //    useEffect 는 페인트 후 실행되지만 이 동기 초기화가 길어 진입 CSS 애니메이션의 다음 프레임들을
+    //    막아 '로드 버벅임'이 생김 → 2 프레임 양보 후 부팅해 셸/텍스트/진입 애니메이션을 먼저 매끄럽게.
+    let disposed = false
+    let cleanup: () => void = () => {}
+    const boot = () => {
+      if (disposed || !canvasRef.current) return
+
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     // ── 렌더러 / 씬 / 카메라 ──
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75))
     renderer.toneMapping = THREE.ACESFilmicToneMapping // 하이라이트를 부드럽게 롤오프 → 백화 방지
     renderer.toneMappingExposure = 0.86
 
@@ -1911,19 +1919,28 @@ export default function Main1() {
     }
     raf = requestAnimationFrame(frame)
 
-    // ── 정리 ──
+      // ── 정리(부팅 완료분) ──
+      cleanup = () => {
+        cancelAnimationFrame(raf)
+        window.removeEventListener('resize', resize)
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerdown', onDown)
+        window.removeEventListener('pointerup', onUp)
+        window.removeEventListener('pointerleave', onLeave)
+        geo.dispose()
+        for (const b of bodies) (b.mesh.material as THREE.Material).dispose()
+        envTex.dispose()
+        pmrem.dispose()
+        renderer.dispose()
+      }
+    }
+
+    // 첫 페인트(진입 애니메이션) 이후로 부팅을 미룸 — 2 프레임 양보.
+    const startId = requestAnimationFrame(() => requestAnimationFrame(boot))
     return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener('resize', resize)
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerdown', onDown)
-      window.removeEventListener('pointerup', onUp)
-      window.removeEventListener('pointerleave', onLeave)
-      geo.dispose()
-      for (const b of bodies) (b.mesh.material as THREE.Material).dispose()
-      envTex.dispose()
-      pmrem.dispose()
-      renderer.dispose()
+      disposed = true
+      cancelAnimationFrame(startId)
+      cleanup() // 부팅 전이면 no-op, 부팅 후면 실제 dispose
     }
   }, [])
 

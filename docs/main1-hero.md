@@ -188,6 +188,12 @@
 - [x] **접근성**: `prefers-reduced-motion` 시 구체 힘 40%·레이저 드리프트 0·키네틱/패럴럭스/드래그 안내 정적.
 - [x] **정리**: 언마운트 시 두 rAF(구체·레이저)·패럴럭스 rAF·리스너·geometry/material/env/renderer dispose.
 
+### 13-1. 로드 성능 최적화 ⚡ (2026-07-01)
+> 증상: 로드 시점에 페이지 전체가 버벅임. 원인은 ① three.js 가 앱 번들에 합쳐져(≈860KB) 초기 파싱이 무겁고 ② 히어로 three 초기화(PMREM 환경맵·구체 생성·WebGL 컨텍스트)가 **동기 실행**되어 진입 CSS 애니메이션의 다음 프레임들을 막음.
+- **three.js 청크 분리**(`vite.config.ts` `build.rollupOptions.output.manualChunks` — Vite 8/Rolldown 은 **함수 형태**): `node_modules/three` → `three-*.js` 별도 청크. 앱 청크 860KB→**340KB**(gzip 108KB) + three **519KB**(gzip 130KB) 병렬 로드·캐시 분리(재방문 시 앱 코드만 재파싱).
+- **초기화 지연 부팅**: three `useEffect` 를 `boot()` 로 감싸 **`rAF→rAF`(2프레임) 뒤 실행** → 셸/타이틀/진입 애니메이션을 먼저 매끄럽게 페인트한 뒤 히어로 부팅(캔버스 `alpha:true` 라 그 사이 CSS 네이비 배경·타이틀 노출, 구체는 인트로 스케일로 팝인). 정리는 `cleanup`(부팅 전이면 no-op) + 외부 return 에서 `disposed`/`startId` 취소로 안전.
+- **`setPixelRatio` 상한** `2 → 1.75`(고DPI GPU 부하↓, 육안 차이 미미).
+
 ## 14. 주요 튜닝 상수 (요약)
 
 | 카테고리 | 상수 | 값 |
