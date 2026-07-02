@@ -2085,6 +2085,9 @@
 .wm__body > *:nth-child(6) {
   animation-delay: 0.47s;
 }
+.wm__body > *:nth-child(7) {
+  animation-delay: 0.54s;
+}
 @keyframes wmRise {
   from {
     opacity: 0;
@@ -2318,6 +2321,280 @@
 .wm__panel[data-tone='e'] {
   --cover: linear-gradient(150deg, #143a52 0%, #2a8fb0 100%);
 }
+
+/* ───────── 상세 갤러리 슬라이더(.wg) — scroll-snap + 화살표/도트, 슬라이드는 크롭(cover) ───────── */
+.wg {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #e7edf6;
+  border: 1px solid rgba(20, 30, 50, 0.1);
+}
+.wg__track {
+  display: flex;
+  aspect-ratio: 16 / 10;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.wg__track::-webkit-scrollbar {
+  display: none;
+}
+.wg__slide {
+  position: relative;
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+.wg__slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center; /* 세로(모바일) 스샷은 상단 위주로 대략 크롭 */
+  display: block;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+/* 원본 보기 힌트(줌 아이콘) */
+.wg__zoom {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: #fff;
+  background: rgba(12, 20, 34, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .wg__slide:hover .wg__zoom {
+    opacity: 1;
+  }
+}
+/* 좌우 화살표 */
+.wg__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(12, 20, 34, 0.4);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+.wg__nav::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+}
+.wg__nav--prev {
+  left: 10px;
+}
+.wg__nav--prev::before {
+  transform: translate(-30%, -50%) rotate(45deg);
+}
+.wg__nav--next {
+  right: 10px;
+}
+.wg__nav--next::before {
+  transform: translate(-70%, -50%) rotate(-135deg);
+}
+.wg__nav:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .wg__nav:hover {
+    background: rgba(12, 20, 34, 0.6);
+  }
+}
+/* 도트 · 카운터 */
+.wg__dots {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 7px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(12, 20, 34, 0.32);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.wg__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.wg__dot.is-active {
+  background: #fff;
+  transform: scale(1.3);
+}
+.wg__count {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  background: rgba(12, 20, 34, 0.42);
+  border-radius: 999px;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+/* ───────── 원본 라이트박스(.lb) — 전체 이미지(contain) ───────── */
+.lb {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 56px);
+  background: rgba(6, 10, 20, 0.82);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: wmFade 0.25s ease both;
+}
+.lb__img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 30px 90px -30px rgba(0, 0, 0, 0.7);
+  cursor: default;
+  animation: wmPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.lb__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.lb__close span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16px;
+  height: 2px;
+  background: #fff;
+}
+.lb__close span:first-child {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.lb__close span:last-child {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+@media (hover: hover) {
+  .lb__close:hover {
+    background: rgba(255, 255, 255, 0.22);
+    transform: rotate(90deg);
+  }
+}
+.lb__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+.lb__nav::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-left: 2.4px solid #fff;
+  border-bottom: 2.4px solid #fff;
+}
+.lb__nav--prev {
+  left: clamp(10px, 3vw, 30px);
+}
+.lb__nav--prev::before {
+  transform: translate(-30%, -50%) rotate(45deg);
+}
+.lb__nav--next {
+  right: clamp(10px, 3vw, 30px);
+}
+.lb__nav--next::before {
+  transform: translate(-70%, -50%) rotate(-135deg);
+}
+.lb__nav:disabled {
+  opacity: 0.25;
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .lb__nav:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+.lb__count {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(14px, 3vw, 26px);
+  transform: translateX(-50%);
+  padding: 5px 13px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb,
+  .lb__img {
+    animation: none;
+  }
+}
+
 /* 태블릿·모바일(≤768) — 전체 화면 덮기(메뉴처럼). 하단에서 슬라이드 업. */
 @media (max-width: 768px) {
   .wm {

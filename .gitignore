@@ -32,3 +32,7 @@ Thumbs.db
 
 # ── Claude Code (로컬 개인 설정) ───────────────────────
 .claude/settings.local.json
+
+# ── 작업용 원본 자료(대용량, 미배포) — 웹용 리사이즈본은 src/assets/works/ 에 커밋 ──
+docs/upload/
+.playwright-mcp/

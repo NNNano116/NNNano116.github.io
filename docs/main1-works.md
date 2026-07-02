@@ -25,7 +25,12 @@
 
 **23개 실경력 프로젝트**(백엔드→풀스택, 2022.01~2026.06). 년도 그룹: 2022(5) · 2023(3) · 2024(6) · 2025(4) · 2026(5).
 
-> ⚠️ **커버 이미지 현재 비활성**(실스크린샷 없음): `hasImage` 를 **전부 `false`** 로 두어 타임라인 펼침·모달 모두 **커버 없이 텍스트 전용**으로 표기(가짜 그라디언트 포스터·대형 인덱스 미노출). 실스크린샷 확보 시 커버 아트(`.tl-item__art` / `.wm__art`)를 **import 한 `url()`** 로 채우고 해당 항목 `hasImage:true` 로 전환(**절대경로 금지** → [`CLAUDE.md §1`](../CLAUDE.md)). `tone` 은 (커버 활성 시) 색조만 결정.
+> **이미지 — 타임라인 커버는 비활성 / 상세 모달에 갤러리(2026-07-02)**:
+> - 타임라인 펼침의 가짜 그라디언트 포스터는 계속 비활성(`hasImage:false`, 텍스트 전용). `.tl-item__art`/`.wm__art`(듀오톤 포스터) CSS 는 잔존하나 미사용.
+> - **상세 모달에는 실스크린샷 갤러리**를 노출: `Project.slug` 가 있으면 `src/assets/works/<slug>/*.webp` 를 슬라이더로. 현재 slug 6개 — `ezmon`(01) · `wincard`(03) · `hcbrs`(14) · `wincard-shop`(16) · `noahsky`(17) · `eatple`(18). 빅토리월렛·조이널·그 외는 스샷 없어 갤러리 없음.
+> - **원본은 리포에 커밋하지 않음**: `docs/upload/`(대용량 원본, `.gitignore`)에서 **PIL 로 webp(≤1366px·q80)로 리사이즈** → `src/assets/works/` 에만 커밋(16장 ≈ 0.6MB). 재생성 스크립트는 세션 참고(파일명 `NN-*` 접두사로 정렬).
+> - Vite `import.meta.glob('../assets/works/**/*.webp', {eager,query:'?url'})` → `IMAGES_BY_SLUG` 로 slug 별 정렬 로딩.
+> · **정렬 = 최신순**: 년도 그룹은 `year` 로 자동 묶여 **내림차순**(상단이 최신 2026), 년도 내 항목도 **`idx` 내림차순**(같은 해 최신 달이 위).
 > · **정렬 = 최신순**: 년도 그룹은 `year` 로 자동 묶여 **내림차순**(상단이 최신 2026), 년도 내 항목도 **`idx` 내림차순**(같은 해 최신 달이 위). `idx` 는 커리어 순번이라 오래된 프로젝트가 작은 번호. 자동 펼침 대상(`firstIdx`)은 **최신 = `PROJECTS` 마지막 원소**(최상단 항목).
 
 ## 3. 타임라인 인터랙션 (`WorksTimeline`)
@@ -85,8 +90,13 @@
     - **Details 행 `wm__rows/row`** = `resume__contact`(key/value + 하단 헤어라인 `#e1e6f0`, key `#93a0ba`).
     - **버튼(링크 `wm__link`·타임라인 `tl-item__view`)** = skill pill 언어(`999px`·같은 블루) + **상호작용**(호버 bg/border 강조·링크 화살표 슬라이드).
   - ⭐ **상세 모달 전체 sans 통일(2026-07-02, 최종)**: 사용자 요청 — **상세(모달) 전체를 요약 문구(`.tl-item__desc`) 폰트(sans)로 통일**. 모달 내 남아있던 mono(섹션 헤더 `wm__h`·칩 `wm__chip`·링크 `wm__link`)를 **전부 sans 로 전환**(섹션 헤더는 uppercase 라벨 스타일만 유지). → **모달에는 mono 텍스트 없음**. (예외: 커버 포스터 `wm__cover-tag`·`wm__num` 은 `hasImage:false` 라 현재 미표시 → 그대로 둠.) ※ **타임라인(3P 리스트)의 스택 칩 `.tl-chip` 등 영문 토큰은 여전히 mono**(모달만 전체 sans).
+  - ⭐ **이미지 갤러리 + 원본 라이트박스(`WorkGallery`·`Lightbox`, 2026-07-02)** — head/note 다음 `Gallery` 섹션(이미지 있는 프로젝트만).
+    - **슬라이더 `.wg`**: `scroll-snap-type:x mandatory` 트랙 + 슬라이드 100%폭. **모바일 네이티브 스와이프** + PC **좌우 화살표·도트·`n/total` 카운터**(단일 이미지면 `wg--single` 로 컨트롤 숨김). `onScroll` 로 active 도트 동기화, 버튼은 `scrollTo({behavior:smooth})`(reduced-motion 이면 auto).
+    - **대략 크롭**: 슬라이드 프레임 `aspect-ratio:16/10` + `object-fit:cover; object-position:top center` → 세로(모바일) 스샷도 상단 위주로 컴팩트하게. 영역 과점유 방지.
+    - **원본 확인**: 슬라이드 클릭 → `Lightbox`(`document.body` portal, `z-index:1100`) 전체 이미지 `object-fit:contain` + 좌우 이동·ESC·백드롭·`◀▶` 카운터. 모달 ESC 는 `lbRef` 가드로 **라이트박스가 열려있으면 모달이 안 닫힘**(라이트박스 우선).
+    - 표시 이미지는 **리사이즈 webp**(≤1366px) — '원본'도 이 최적화본(전체 화면 표시)이라 사이트 경량 유지.
   - **반응형**: PC = 중앙 다이얼로그(`min(720px)`), **≤768 = 전체화면**(하단 슬라이드 업 `wmSlideUp`·타이틀/여백 축소). `data-noimg`(커버 비활성)는 본문 상단 여백 확대 + 닫기 버튼 밝은 배경용.
-  - **접근성**: `reduced-motion` 이면 팝·슬라이드·켄번스·스태거 **전부 정지**(정적 표시).
+  - **접근성**: `reduced-motion` 이면 팝·슬라이드·켄번스·스태거·라이트박스 애니 **전부 정지**(정적 표시).
 
 ## 5. ⚠️ animateTo 워치독 — 모달 blur 가 휠 스크롤을 '죽이던' 버그 (2026-07-01)
 

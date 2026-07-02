@@ -198,7 +198,23 @@ type Project = {
   note?: string
   tone: string
   hasImage: boolean // 펼침 패널에 커버(이미지) 노출 여부. false 면 텍스트 전용 레이아웃.
+  slug?: string // 상세 모달 갤러리 이미지 그룹 키(src/assets/works/<slug>/*.webp) — 있으면 슬라이더 노출.
 }
+
+// 프로젝트 갤러리 이미지 — 웹용 리사이즈본(webp, ≤1366px)만 사용. 원본(docs/upload)은 리포에 넣지 않고,
+// PIL 로 최적화한 src/assets/works/<slug>/NN-*.webp 를 Vite glob 으로 URL 로딩(파일명 NN 접두사로 정렬).
+const WORK_IMG = import.meta.glob('../assets/works/**/*.webp', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>
+const IMAGES_BY_SLUG: Record<string, string[]> = {}
+Object.keys(WORK_IMG)
+  .sort()
+  .forEach((p) => {
+    const m = p.match(/\/works\/([^/]+)\//)
+    if (m) (IMAGES_BY_SLUG[m[1]] ||= []).push(WORK_IMG[p])
+  })
 const WINCARD_LINKS: ProjectLink[] = [
   { label: 'wincard.kr', url: 'https://www.wincard.kr' },
   { label: 'wincard.co.kr', url: 'https://www.wincard.co.kr' },
@@ -207,7 +223,7 @@ const VWALLET_LINKS: ProjectLink[] = [{ label: 'vwallet.kr', url: 'https://www.v
 const PROJECTS: Project[] = [
   {
     idx: '01', name: '이지몬 — NFT 수익공유 플랫폼', client: '이지몬', year: 2022, period: '2022.01 ~ 2022.04',
-    role: 'Backend · App', tone: 'a', hasImage: false,
+    role: 'Backend · App', tone: 'a', hasImage: false, slug: 'ezmon',
     summary: 'NFT 캐릭터 기반 수익공유 플랫폼 리뉴얼 및 신규 기능 개발.',
     overview: [
       '사내 운영 플랫폼 이지몬의 서비스 리뉴얼 및 신규 기능 추가.',
@@ -243,7 +259,7 @@ const PROJECTS: Project[] = [
   },
   {
     idx: '03', name: '윈카드 — B2B 복지카드 솔루션 (신규)', client: '윈카드', year: 2022, period: '2022.05 ~ 2022.07',
-    role: 'Backend · App', tone: 'c', hasImage: false,
+    role: 'Backend · App', tone: 'c', hasImage: false, slug: 'wincard',
     summary: '신한카드 MOU 기반 B2B 복지카드·수당지급 솔루션 신규 개발.',
     overview: [
       '사내 B2B 복지카드 및 영업 수당지급 솔루션 신규 개발.',
@@ -458,7 +474,7 @@ const PROJECTS: Project[] = [
   },
   {
     idx: '14', name: '온리윈 · 힐링셀바이오 — 프로모션 마이오피스', client: 'ONLYWIN · 힐링셀바이오', year: 2024, period: '2024.10 ~ 2025.01',
-    role: 'Backend', tone: 'd', hasImage: false,
+    role: 'Backend', tone: 'd', hasImage: false, slug: 'hcbrs',
     summary: '선착순·멤버십 특수 프로모션 수당 알고리즘 기반 마이오피스 신규 개발.',
     overview: [
       '네트워크 마케팅 조합 신규 플랫폼 ONLYWIN 마이오피스 전산 개발.',
@@ -498,7 +514,7 @@ const PROJECTS: Project[] = [
   },
   {
     idx: '16', name: '윈카드 · 빅토리월렛 — 글로벌 이체 · 상점 (3차)', client: '윈카드 · 빅토리월렛', year: 2025, period: '2025.02 ~ 2025.06',
-    role: 'Backend', tone: 'a', hasImage: false,
+    role: 'Backend', tone: 'a', hasImage: false, slug: 'wincard-shop',
     summary: '중국 글로벌 이체·라이브 환전, 충전·결제 API 및 윈카드 상점 서비스.',
     overview: [
       'B2B 복지카드·수당지급 솔루션 기능 개선 및 3차 개발.',
@@ -520,7 +536,7 @@ const PROJECTS: Project[] = [
   },
   {
     idx: '17', name: 'HCBRS · NOAH · NOAH SKY — 글로벌 2차 개발', client: 'ONLYWIN', year: 2025, period: '2025.06 ~ 2025.08',
-    role: 'Backend', tone: 'b', hasImage: false,
+    role: 'Backend', tone: 'b', hasImage: false, slug: 'noahsky',
     summary: '힐링셀바이오·NOAH 리뉴얼 및 글로벌 확장, 승급형 멤버십 추가.',
     overview: [
       'ONLYWIN 사 플랫폼 힐링셀바이오·NOAH 리뉴얼 및 글로벌 2차 개발.',
@@ -538,7 +554,7 @@ const PROJECTS: Project[] = [
   },
   {
     idx: '18', name: '잇플 (EATPLE) — 노쇼 음식 특가 커머스', client: '잇플', year: 2025, period: '2025.09 ~ 2025.12',
-    role: 'Backend · App', tone: 'c', hasImage: false,
+    role: 'Backend · App', tone: 'c', hasImage: false, slug: 'eatple',
     summary: '노쇼 음식을 특가 판매하는 위치기반 하이브리드 웹/앱 커머스, 기획~운영 담당.',
     overview: [
       '기획·개발·운영까지 담당한 하이브리드 웹/앱 프로젝트.',
@@ -862,9 +878,13 @@ function WorksTimeline({ page, menuOpen }: { page: number; menuOpen: boolean }) 
 // 상세 모달 — View 클릭 시. PC=중앙 다이얼로그 / 태블릿·모바일=전체 화면 덮기(메뉴처럼).
 //  · 백드롭/ESC 로 닫힘. document.body 로 portal → .main1 변형·스크롤과 독립(전체 뷰포트 고정).
 function WorkModal({ project, onClose }: { project: Project; onClose: () => void }) {
+  const images = project.slug ? IMAGES_BY_SLUG[project.slug] ?? [] : []
+  const [lightbox, setLightbox] = useState<number | null>(null) // 원본 보기(라이트박스) 인덱스
+  const lbRef = useRef(lightbox)
+  lbRef.current = lightbox
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape' && lbRef.current === null) onClose() // 라이트박스 열려있으면 그쪽이 먼저 닫힘
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -904,6 +924,12 @@ function WorkModal({ project, onClose }: { project: Project; onClose: () => void
             <p className="wm__lead">{project.summary}</p>
           </div>
           {project.note ? <p className="wm__note">{project.note}</p> : null}
+          {images.length ? (
+            <section className="wm__section">
+              <h4 className="wm__h">Gallery</h4>
+              <WorkGallery images={images} onOpen={setLightbox} />
+            </section>
+          ) : null}
           <section className="wm__section">
             <h4 className="wm__h">Overview</h4>
             <ul className="wm__list">
@@ -970,6 +996,149 @@ function WorkModal({ project, onClose }: { project: Project; onClose: () => void
           </section>
         </div>
       </div>
+      {lightbox !== null
+        ? createPortal(
+            <Lightbox images={images} index={lightbox} onClose={() => setLightbox(null)} />,
+            document.body,
+          )
+        : null}
+    </div>
+  )
+}
+
+// 상세 갤러리 슬라이더 — scroll-snap 기반(모바일 스와이프 네이티브 + PC 화살표/도트). 슬라이드는 크롭(cover),
+//  클릭 시 원본(라이트박스, contain)로 전체 확인. reduced-motion 이면 부드러운 스크롤 대신 즉시 이동.
+function WorkGallery({ images, onOpen }: { images: string[]; onOpen: (i: number) => void }) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [active, setActive] = useState(0)
+  const multi = images.length > 1
+  const go = (i: number) => {
+    const el = trackRef.current
+    if (!el) return
+    const to = Math.max(0, Math.min(images.length - 1, i))
+    const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    el.scrollTo({ left: el.clientWidth * to, behavior: smooth ? 'smooth' : 'auto' })
+  }
+  const onScroll = () => {
+    const el = trackRef.current
+    if (!el) return
+    setActive(Math.round(el.scrollLeft / Math.max(1, el.clientWidth)))
+  }
+  return (
+    <div className={`wg${multi ? '' : ' wg--single'}`}>
+      <div className="wg__track" ref={trackRef} onScroll={onScroll}>
+        {images.map((src, i) => (
+          <button
+            type="button"
+            className="wg__slide"
+            key={src}
+            onClick={() => onOpen(i)}
+            aria-label={`이미지 ${i + 1} 원본 보기`}
+          >
+            <img src={src} alt="" loading="lazy" draggable={false} />
+            <span className="wg__zoom" aria-hidden="true">
+              ⤢
+            </span>
+          </button>
+        ))}
+      </div>
+      {multi ? (
+        <>
+          <button
+            type="button"
+            className="wg__nav wg__nav--prev"
+            onClick={() => go(active - 1)}
+            disabled={active === 0}
+            aria-label="이전 이미지"
+          />
+          <button
+            type="button"
+            className="wg__nav wg__nav--next"
+            onClick={() => go(active + 1)}
+            disabled={active === images.length - 1}
+            aria-label="다음 이미지"
+          />
+          <div className="wg__dots">
+            {images.map((_, i) => (
+              <button
+                type="button"
+                className={`wg__dot${i === active ? ' is-active' : ''}`}
+                key={i}
+                onClick={() => go(i)}
+                aria-label={`${i + 1}번째 이미지`}
+              />
+            ))}
+          </div>
+          <span className="wg__count">
+            {active + 1} / {images.length}
+          </span>
+        </>
+      ) : null}
+    </div>
+  )
+}
+
+// 원본 라이트박스 — 전체 이미지(contain) + 좌우 이동·ESC·백드롭 닫힘. document.body portal.
+function Lightbox({
+  images,
+  index,
+  onClose,
+}: {
+  images: string[]
+  index: number
+  onClose: () => void
+}) {
+  const [i, setI] = useState(index)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+      else if (e.key === 'ArrowLeft') setI((v) => Math.max(0, v - 1))
+      else if (e.key === 'ArrowRight') setI((v) => Math.min(images.length - 1, v + 1))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [images.length, onClose])
+  const multi = images.length > 1
+  return (
+    <div className="lb" role="dialog" aria-modal="true" aria-label="원본 이미지" onClick={onClose}>
+      <button type="button" className="lb__close" onClick={onClose} aria-label="닫기">
+        <span />
+        <span />
+      </button>
+      <img
+        className="lb__img"
+        src={images[i]}
+        alt=""
+        draggable={false}
+        onClick={(e) => e.stopPropagation()}
+      />
+      {multi ? (
+        <>
+          <button
+            type="button"
+            className="lb__nav lb__nav--prev"
+            onClick={(e) => {
+              e.stopPropagation()
+              setI((v) => Math.max(0, v - 1))
+            }}
+            disabled={i === 0}
+            aria-label="이전"
+          />
+          <button
+            type="button"
+            className="lb__nav lb__nav--next"
+            onClick={(e) => {
+              e.stopPropagation()
+              setI((v) => Math.min(images.length - 1, v + 1))
+            }}
+            disabled={i === images.length - 1}
+            aria-label="다음"
+          />
+          <div className="lb__count">
+            {i + 1} / {images.length}
+          </div>
+        </>
+      ) : null}
     </div>
   )
 }
