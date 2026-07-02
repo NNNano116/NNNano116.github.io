@@ -27,7 +27,8 @@
 
 > **이미지 — 타임라인 커버는 비활성 / 상세 모달에 갤러리(2026-07-02)**:
 > - 타임라인 펼침의 가짜 그라디언트 포스터는 계속 비활성(`hasImage:false`, 텍스트 전용). `.tl-item__art`/`.wm__art`(듀오톤 포스터) CSS 는 잔존하나 미사용.
-> - **상세 모달에는 실스크린샷 갤러리**를 노출: `Project.slug` 가 있으면 `src/assets/works/<slug>/*.webp` 를 슬라이더로. 현재 slug 6개 — `ezmon`(01) · `wincard`(03) · `hcbrs`(14) · `wincard-shop`(16) · `noahsky`(17) · `eatple`(18). 빅토리월렛·조이널·그 외는 스샷 없어 갤러리 없음.
+> - **상세 모달에는 실스크린샷 갤러리**를 노출: `Project.slug` 가 있으면 `src/assets/works/<slug>/*.webp` 를 슬라이더로. 현재 slug **11개** — `ezmon`(01, 포트폴리오 페이지+영상/기사/아이콘) · `odiste`(02, 포트폴리오 페이지) · `wincard`(03, 포트폴리오 페이지+메인/앱다운) · `lmworld`(04, 포트폴리오 페이지) · `nareul`(05, 포트폴리오 페이지) · `hcbrs`(14) · `wincard-shop`(16) · `noahsky`(17) · `eatple`(18) · `noon`(22, 모바일 3장) · `winoffice`(23, 빌더/회원/관리자 10장). 빅토리월렛·조이널 등 나머지는 스샷 없어 갤러리 없음.
+> - `docs/upload/포트폴리오/*.jpg`(1080×3211 세로형 디자인 페이지) 중 **현 PROJECTS 와 매핑되는 5장만 사용**(이지몬·오디스트·윈카드·LM·나를미디어). EPM·K-ROAD·KK뮤지엄·NESpay·NoPos·cms·vmp·메타월드·미러톡톡·배틀매치·뷰티온·사랑나무요양원·야나랑·올림푸스·지구물산·플레이블록·플레이콕 등은 **PROJECTS 에 없는 과거 프로젝트라 보류**.
 > - **원본은 리포에 커밋하지 않음**: `docs/upload/`(대용량 원본, `.gitignore`)에서 **PIL 로 webp(≤1366px·q80)로 리사이즈** → `src/assets/works/` 에만 커밋(16장 ≈ 0.6MB). 재생성 스크립트는 세션 참고(파일명 `NN-*` 접두사로 정렬).
 > - Vite `import.meta.glob('../assets/works/**/*.webp', {eager,query:'?url'})` → `IMAGES_BY_SLUG` 로 slug 별 정렬 로딩.
 > · **정렬 = 최신순**: 년도 그룹은 `year` 로 자동 묶여 **내림차순**(상단이 최신 2026), 년도 내 항목도 **`idx` 내림차순**(같은 해 최신 달이 위).

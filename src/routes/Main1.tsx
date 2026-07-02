@@ -242,7 +242,7 @@ const PROJECTS: Project[] = [
   },
   {
     idx: '02', name: '오디스트 · 예잇 — 웹 에이전시', client: '오디스트 · 예잇', year: 2022, period: '2022.04 ~ 2022.05',
-    role: 'Backend', tone: 'b', hasImage: false,
+    role: 'Backend', tone: 'b', hasImage: false, slug: 'odiste',
     summary: '아티스트 소개 페이지와 SNS형 쇼핑몰 제작·유지보수.',
     overview: [
       '웹 에이전시 프로젝트 개발 및 서비스 유지보수.',
@@ -279,7 +279,7 @@ const PROJECTS: Project[] = [
   },
   {
     idx: '04', name: 'LM월드 · 조이널 — 네트워크 마케팅 마이오피스', client: 'LMWORLD · JOINALL', year: 2022, period: '2022.08 ~ 2022.10',
-    role: 'Backend', tone: 'd', hasImage: false,
+    role: 'Backend', tone: 'd', hasImage: false, slug: 'lmworld',
     summary: '네트워크 마케팅 수당 지급 체계 및 쇼핑몰 마이오피스 전산 개발.',
     overview: [
       'LMWORLD·JOINALL 2개 기업의 네트워크 마케팅 전용 마이오피스 전산 개발.',
@@ -299,7 +299,7 @@ const PROJECTS: Project[] = [
   },
   {
     idx: '05', name: '나를미디어 — 네이버 플레이스 랭킹 추적', client: '나를미디어', year: 2022, period: '2022.10 ~ 2022.12',
-    role: 'Backend', tone: 'e', hasImage: false,
+    role: 'Backend', tone: 'e', hasImage: false, slug: 'nareul',
     summary: '4만 가게의 네이버 플레이스 검색 순위를 크롤링·기록하는 광고효과 추적 전산.',
     overview: [
       '광고 서비스 등록 가게 리스트를 전산 등록·관리·운영하는 시스템.',
@@ -635,7 +635,7 @@ const PROJECTS: Project[] = [
   },
   {
     idx: '22', name: '노온 (NOON) — AI 불만리뷰 SNS', client: '노온', year: 2026, period: '2026.03 ~ 2026.04',
-    role: 'Fullstack · App', tone: 'b', hasImage: false,
+    role: 'Fullstack · App', tone: 'b', hasImage: false, slug: 'noon',
     summary: 'AI 리뷰 도우미·OCR 검증을 지원하는 불만 공유 리뷰 SNS 신규 개발.',
     overview: [
       'AI 지원 불만 공유 리뷰 서비스 NOON 신규 개발.',
@@ -655,7 +655,7 @@ const PROJECTS: Project[] = [
   },
   {
     idx: '23', name: '윈오피스 (WINOFFICE) — 마이오피스 빌더', client: '윈오피스', year: 2026, period: '2026.04 ~ 2026.06',
-    role: 'Solo (기획·디자인·개발)', tone: 'c', hasImage: false,
+    role: 'Solo (기획·디자인·개발)', tone: 'c', hasImage: false, slug: 'winoffice',
     summary: '누구나 마이오피스를 생성·운영하는 빌더 SaaS, 기획·디자인·개발 1인 완성.',
     overview: [
       '마이오피스 빌더 서비스 WINOFFICE 신규 개발.',
